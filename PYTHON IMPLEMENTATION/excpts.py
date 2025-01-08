@@ -6,3 +6,6 @@ class CellException(Exception):
 
 class WorldException(Exception):
     pass
+
+class CommandException(Exception):
+    pass

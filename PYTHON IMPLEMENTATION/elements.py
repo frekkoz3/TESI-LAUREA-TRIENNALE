@@ -1,9 +1,10 @@
 from excpts import *
+from decisions import *
 import random
 
 BLANK_COLOR = (255, 255, 255)
 CELL_PARAMS = {"energy" : 0, "minimum" : 0, "maximum" : 0, "regeneration" : 0}
-CELL_SIDE = 10
+CELL_SIDE = 20
 
 class Cell():
 
@@ -20,7 +21,10 @@ class Cell():
     
     def release_energy(self, request):
         # This function is built in case for when someone pick up the energy
-        self.energy = max (0, self.energy - request)
+        # We return how actual energy is released
+        actual_energy = min (self.energy, request)
+        self.energy = self.energy - actual_energy
+        return actual_energy
     
     def update(self):
         if self.energy > self.minimum_energy_level:
@@ -36,14 +40,14 @@ class Cell():
 
 class World():
 
-    def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, density = 0.1, cell_side = 5):
+    def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, density = 0.1):
         # The density parameter tell the portion of cells that should be activate
         self.length = length
         self.height = height
         self.cell_energy = cell_energy
         self.__cells__ = [[Cell(parameters) for l in range (length)] for h in range (height)]
         self.density = density
-        self.cell_side = cell_side
+        self.cell_side = CELL_SIDE
         self.populate()
     
     def populate(self):
@@ -85,26 +89,105 @@ class World():
     
 class Individual():
 
-    def __init__(self):
+    def __init__(self, max_age = 100, birth_energy = 10, social_param = [1/3, 1/3, 1/3], position = [0, 0]):
+        # Now we have to consider that individual will born only once with prefixed values, then it 
+        # will depends on the parents state at the moment of the birth
         self.age = 0
-        self.energy = 0
-        self.social_params = [0, 0, 0] # Selfishness, Altruism, Normality
+        self.max_age = max_age
+        self.energy = birth_energy
+        self.selfishness_param = social_param[0]
+        self.altruism_param = social_param[1]
+        self.normality_param = social_param[2]
+        self.position = position
+        self.last_action = 'Rest'
+
+    def update(self, pop):
+        if self.energy <= 0 or self.age >= self.max_age:
+            pop.death(self)
+        else:
+            self.energy -= POSSIBILITIES[self.last_action]
+            self.energy -= 1 # BASAL METABOLISM, TO IMPLEMENT
+            self.age += 1
+    
+    def action(self, pop, world : World, selfish : SelfishProcess, altruistic : AltruisticProcess, normal : NormalProcess):
+        selfish_decision = selfish.decision(self, pop, world)
+        altruistic_decision = altruistic.decision(self, pop, world)
+        normal_decision = normal.decision(self, pop, world)
+        sample = random.uniform(0, 1)
+        actual_decision = selfish_decision if sample < self.selfishness_param else altruistic_decision
+        actual_decision = actual_decision if sample < self.altruism_param else normal_decision
+        split_decision = actual_decision.split("_")
+        if split_decision[0] == 'Move':
+            self.move(split_decision[1])
+        elif split_decision[0] == 'Rest':
+            self.rest()
+        elif split_decision[0] == 'Eat':
+            self.eat(int(split_decision[1]), world[self.position])
+            actual_decision = 'Eat_1'
+        elif split_decision[0] == 'Reproduce':
+            self.reproduce(pop)
+        elif split_decision[0] == 'Pollute':
+            self.pollute()
+        self.last_action = actual_decision
+                
+    def move(self, direction = 'N'):
+        # It moves only in the 4 directions
+        if direction == 'N':
+            self.position = [self.position[0] + 1, self.position[1]]
+        elif direction == 'S':
+            self.position = [self.position[0] - 1, self.position[1]]
+        elif direction == 'W':
+            self.position = [self.position[0], self.position[1] - 1]
+        elif direction == 'W':
+            self.position = [self.position[0], self.position[1] + 1]
+
+    def rest(self):
+        # It just stays where it is
         pass
 
-    def update(self):
-        pass
-    
-    def action(self):
+    def eat(self, request, cell : Cell):
+        self.energy += cell.release_energy(request)
+
+    def reproduce(self, pop):
+        # This should implement the classical evolution scheme
+        son = Individual() # We should implement a lot of think here, don't worry for now
+        self.energy *= 0.5 # This parameter is to tweak
+        pop.birth(son)
+
+    def pollute(self):
         pass
 
     def get_color(self):
-        return (self.social_params[0], self.social_params[1], self.social_params[2])
+        return (255*self.selfishness_param, 255*self.altruism_param, 255*self.normality_param)
 
         
 class Population():
 
-    def __init__(self, initial_population_size):
-        self.__individuals__ = [Individual() for i in range (initial_population_size)]
+    def __init__(self, initial_population_size, initial_position):
+        # For now the processes stay here
+        self.cell_side = CELL_SIDE
+        self.__individuals__ = [Individual(position=initial_position[i]) for i in range (initial_population_size)]
+        self.selfish_process = SelfishProcess()
+        self.altruistic_process = AltruisticProcess()
+        self.normal_process = NormalProcess()
 
     def __getitem__(self, idx):
         return self.__individuals__[idx]
+
+    def birth(self, newOne):
+        self.__individuals__.append(newOne)
+    
+    def death(self, individual):
+        # We will try if this actually work
+        #self.__individuals__.remove(individual)
+        pass
+    
+    def update(self, world : World):
+        for i in range (len(self.__individuals__)):
+            self.__individuals__[i].action(self, world, self.selfish_process, self.altruistic_process, self.normal_process)
+            # HERE WE MUST think at the conflicts, do not worry now 
+            # MAYBE they are already thinked in the processes system but i don't think 
+        for i in range (len(self.__individuals__)):
+            self.__individuals__[i].update(self)
+            # Not sure the individual death works
+        

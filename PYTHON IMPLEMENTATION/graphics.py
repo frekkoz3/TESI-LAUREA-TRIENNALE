@@ -12,16 +12,15 @@ def draw_world(screen, grid_world : World):
             pygame.draw.rect(screen, grid_world[(i, j)].get_color(), pygame.Rect(i*side, j*side, side, side))
 
 # Draw the agents
-def agents(something, t):
-    agents_list = something.get("agents", [])
-    for agent in agents_list:
-        x, y = agent.get("position", (0, 0))
-        color = agent.get("color", (0, 0, 255))
-        radius = agent.get("radius", 10)
-        pygame.draw.circle(something["screen"], color, (x-radius, y-radius), radius)
+def draw_population(screen, pop : Population):
+    side = pop.cell_side
+    for individual in pop:
+        x, y = individual.position
+        color = individual.get_color()
+        pygame.draw.rect(screen, color, pygame.Rect(x*side, y*side, side, side))
 
 # Main game loop
-def play(something, world : World, *args, **kwargs):
+def play(pop : Population, world : World):
     # Initialize PyGame
     pygame.init()
 
@@ -33,9 +32,6 @@ def play(something, world : World, *args, **kwargs):
 
     # Add screen dimensions to `something`
     grid_world = world
-    something["width"] = WIDTH
-    something["height"] = HEIGHT
-    something["screen"] = screen
 
     t = 0
     while True:
@@ -50,7 +46,11 @@ def play(something, world : World, *args, **kwargs):
 
         # Call the drawing functions
         draw_world(screen, grid_world)
-        agents(something, t)
+        draw_population(screen, pop)
+
+        pop.update(world)
+        world.update()
+
         # Update the display
         pygame.display.flip()
 
@@ -58,16 +58,10 @@ def play(something, world : World, *args, **kwargs):
         t += 1
         clock.tick(2)
 
-# Something object with grid and agent info
-something = {
-    "cell_size": 50,
-    "agents": [
-        {"position": (100, 100), "color": (0, 0, 255), "radius": 25},
-        {"position": (200, 150), "color": (255, 0, 0), "radius": 25},
-    ]
-}
-
 # Entry point
 if __name__ == "__main__":
-    w = World(15, 15, cell_side=50)
-    play(something, w)
+    world = World(15, 15)
+    initial_position = [[random.randint(0, 14), random.randint(0, 14)] for i in range (5)]
+    print(initial_position)
+    pop = Population(5, initial_position)
+    play(pop, world)
