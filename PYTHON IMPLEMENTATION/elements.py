@@ -1,6 +1,7 @@
 from excpts import *
 from decisions import *
 from common import *
+from action_handler import *
 import random
 
 BLANK_COLOR = (255, 255, 255)
@@ -170,7 +171,13 @@ class Individual():
 
     def reproduce(self, pop):
         # This should implement the classical evolution scheme
-        son = Individual() # We should implement a lot of think here, don't worry for now
+        mutation_1 = random.uniform(-0.1, 0.1)
+        mutation_2 = random.uniform(-0.1, 0.1)
+        mutation_3 = - (mutation_1 + mutation_2)
+        son_social_param = [self.selfishness_param - mutation_1, self.altruism_param - mutation_2, self.normality_param - mutation_3]
+        age_mutation = random.randrange(-10, 10)
+        son_max_age = self.max_age + age_mutation     
+        son = Individual(social_param=son_social_param, max_age=son_max_age) # We should implement a lot of think here, don't worry for now
         self.energy = self.energy//2 # This parameter is to tweak
         pop.birth(son)
 
