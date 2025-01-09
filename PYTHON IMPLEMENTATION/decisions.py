@@ -30,16 +30,18 @@ class SelfishProcess(DecisionalProcess):
         pos = individual.position
         food = world.asList()
         # EAT IF POSSIBLE
-        if pos in food and individual.energy < individual.max_energy/2:
+        if tuple(pos) in list(food) and individual.energy < individual.max_energy/2:
             to_eat = individual.max_energy - individual.energy
             return f"Eat_{to_eat}"
-        elif pos in food and individual.energy >= individual.max_energy/2:
+        # IF OVER A FOOD STAY THERE
+        elif tuple(pos) in food and individual.energy >= individual.max_energy/2:
             return "Rest"
-        # SEARCH FOR THE CLOSEST FOOD -> NOT WORKING
+        # SEARCH FOR THE CLOSEST FOOD
         else:
             food_distance = [abs(pos[0] - w[0]) + abs(pos[1] - w[1]) for w in food]
             min_idx = min(enumerate(food_distance), key=lambda x: x[1])[0]
             food_to_eat = food[min_idx]
+            print(f"{food_to_eat} at distance {food_distance[min_idx]}")
             x_dist = pos[1] - food_to_eat[1]
             y_dist = pos[0] - food_to_eat[0]
             x_direction = 'W' if x_dist > 0 else 'E'

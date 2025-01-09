@@ -90,7 +90,7 @@ class World():
     
 class Individual():
 
-    def __init__(self, max_age = 100, birth_energy = 10, max_energy = 30, social_param = [1, 0, 0], position = [0, 0]):
+    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0]):
         # Now we have to consider that individual will born only once with prefixed values, then it 
         # will depends on the parents state at the moment of the birth
         self.age = 0
@@ -125,6 +125,12 @@ class Individual():
         normal_decision = normal.decision(self, pop, world)
         # SAMPLE PROCESS
         sample = random.uniform(0, 1)
+        if sample < self.selfishness_param:
+            actual_decision = selfish_decision
+        elif sample < self.altruism_param:
+            actual_decision = altruistic_decision
+        else:
+            actual_decision = normal_decision
         actual_decision = selfish_decision  # WELL THE SAMPLE IS TO IMPLEMENT
         # ACTION PROCESS
         split_decision = actual_decision.split("_")
@@ -133,7 +139,7 @@ class Individual():
         elif split_decision[0] == 'Rest':
             self.rest()
         elif split_decision[0] == 'Eat':
-            self.eat(int(split_decision[1]), world[self.position])
+            self.eat(float(split_decision[1]), world[self.position])
             actual_decision = 'Eat_1'
         elif split_decision[0] == 'Reproduce':
             self.reproduce(pop)
