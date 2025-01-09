@@ -20,7 +20,7 @@ def draw_population(screen, pop : Population):
         pygame.draw.rect(screen, color, pygame.Rect(x*side, y*side, side, side))
 
 # Main game loop
-def play(pop : Population, world : World):
+def play(pop : Population, world : World, verbose = False):
     # Initialize PyGame
     pygame.init()
 
@@ -48,7 +48,7 @@ def play(pop : Population, world : World):
         draw_world(screen, grid_world)
         draw_population(screen, pop)
 
-        pop.update(world)
+        pop.update(world, verbose)
         world.update()
 
         # Update the display
@@ -60,8 +60,4 @@ def play(pop : Population, world : World):
 
 # Entry point
 if __name__ == "__main__":
-    world = World(15, 15)
-    initial_position = [[random.randint(0, 14), random.randint(0, 14)] for i in range (5)]
-    print(initial_position)
-    pop = Population(5, initial_position)
-    play(pop, world)
+    pass

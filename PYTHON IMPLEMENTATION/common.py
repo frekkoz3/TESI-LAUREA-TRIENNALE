@@ -1,0 +1,1 @@
+POSSIBILITIES = {'Move_N' : 1, 'Move_W' : 1, 'Move_S' : 1, 'Move_E' : 1, 'Rest' : 0.1, 'Eat_1' : 0.1, 'Reproduce' : 5, 'Pollute' : 0.2}

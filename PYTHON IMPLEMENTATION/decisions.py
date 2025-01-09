@@ -1,44 +1,71 @@
 from abc import ABC, abstractmethod
+from action_handler import *
+from common import *
 import random
-
-POSSIBILITIES = {'Move_N' : 1, 'Move_W' : 1, 'Move_S' : 1, 'Move_E' : 1, 'Rest' : 0.1, 'Eat_1' : 0.1, 'Reproduce' : 5, 'Pollute' : 0.2}
+import math
 
 class DecisionalProcess(ABC):
 
     def __init__(self):
-        pass
+        self.action_checker = ActionHandler()
 
     @abstractmethod
-    def decision(self, individual = None, population = None, world = None):
+    def decision(self, individual, population, world):
         # There are 5 possible action:
         # 1. Move (telling N, E, S, W)
         # 2. Rest 
         # 3. Eat
         # 4. Reproduce
-        # 5. Pollute
+        # 5. Pollute (To think how to implement)
         pass
 
 class SelfishProcess(DecisionalProcess):
 
-    def decision(self, individual = None, population = None, world = None):
+    def decision(self, individual, population, world):
         # We have to develop a simple rule model to implement a "selfish decision process"
-        return random.choice(list(POSSIBILITIES.keys()))
+        action = random.choice(list(POSSIBILITIES.keys()))
+        while not self.action_checker.legitimacy(action, individual, population, world):
+            action = random.choice(list(POSSIBILITIES.keys()))
+        # POSITION OF THE INDIVIDUAL AND FOOD POSITION
+        pos = individual.position
+        food = world.asList()
+        # EAT IF POSSIBLE
+        if pos in food and individual.energy < individual.max_energy/2:
+            to_eat = individual.max_energy - individual.energy
+            return f"Eat_{to_eat}"
+        elif pos in food and individual.energy >= individual.max_energy/2:
+            return "Rest"
+        # SEARCH FOR THE CLOSEST FOOD -> NOT WORKING
+        else:
+            food_distance = [abs(pos[0] - w[0]) + abs(pos[1] - w[1]) for w in food]
+            min_idx = min(enumerate(food_distance), key=lambda x: x[1])[0]
+            food_to_eat = food[min_idx]
+            x_dist = pos[1] - food_to_eat[1]
+            y_dist = pos[0] - food_to_eat[0]
+            x_direction = 'W' if x_dist > 0 else 'E'
+            y_direction = 'N' if y_dist > 0 else 'S'
+            direction = x_direction if x_dist != 0 else y_direction
+            return f"Move_{direction}"
 
 class AltruisticProcess(DecisionalProcess):
 
-    def decision(self, individual = None, population = None, world = None):
+    def decision(self, individual, population, world):
         # We have to develop a simple rule model to implement a "altruistic decision process"
-        return random.choice(list(POSSIBILITIES.keys()))
+        action = random.choice(list(POSSIBILITIES.keys()))
+        while not self.action_checker.legitimacy(action, individual, population, world):
+            action = random.choice(list(POSSIBILITIES.keys()))
+        return action
     
 class NormalProcess(DecisionalProcess):
 
-    def decision(self, individual = None, population = None, world = None):
+    def decision(self, individual, population, world):
         # We have to develop a simple rule model to implement a "normal decision process"
-        return random.choice(list(POSSIBILITIES.keys()))
+        action = random.choice(list(POSSIBILITIES.keys()))
+        while not self.action_checker.legitimacy(action, individual, population, world):
+            action = random.choice(list(POSSIBILITIES.keys()))
+        return action
 
 if __name__ == "__main__":
-    print(POSSIBILITIES.keys())
-    np = NormalProcess()
-    print(np.decision())
+    pass
 
 
