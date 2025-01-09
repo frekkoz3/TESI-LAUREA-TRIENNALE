@@ -41,7 +41,6 @@ class SelfishProcess(DecisionalProcess):
             food_distance = [abs(pos[0] - w[0]) + abs(pos[1] - w[1]) for w in food]
             min_idx = min(enumerate(food_distance), key=lambda x: x[1])[0]
             food_to_eat = food[min_idx]
-            print(f"{food_to_eat} at distance {food_distance[min_idx]}")
             x_dist = pos[1] - food_to_eat[1]
             y_dist = pos[0] - food_to_eat[0]
             x_direction = 'W' if x_dist > 0 else 'E'
