@@ -1,0 +1,36 @@
+- IMPLEMENTING AN INTERFACE FOR SETTING INITIAL CONDITION
+FOR THE INTERFACE WE NEED TO REGOLATE:
+population size
+population initial distribution on the surface
+population initial parameters distribution 
+population avg max energy
+population avg max age
+world density cell
+world init mode (uniform, center based ecc)
+mutation rate
+action cost
+-> the settings can be both loaded or saved into a file 
+where to save the schedule report
+
+- IMPLEMENTING THE CONFLICT HANDLER
+we must even decide what happens during a space conflict
+
+- IMPLEMENTING THE DECISION PROCESSES
+idea of the communication level
+this is pretty huge in fact
+
+- IMPLEMENTING THE BASAL METABOLISM
+I forgot lol
+
+- IMPLEMENTING A REPORT SCHEDULE
+for every run we must give an easy report schedule into a file
+we must decide statistic we want to store
+
+- POSSIBLY WE CAN ADD SOME COOL SPRITES 
+
+- THINK AT THE -off-graphic SIMULATION (what if we have milion of individual? we can't visualize everything)
+(we should be able both of fixing the focus on a part of the world and then scroll with the mouse and 
+just seeing the stats in real time)
+
+- PROBABLY PARALLELIZE EVERYTHING
+Not so happy but when you know you know
