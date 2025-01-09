@@ -117,7 +117,7 @@ class Individual():
             self.energy -= 1 # BASAL METABOLISM, TO IMPLEMENT
             self.age += 1
     
-    def action(self, pop, world : World, selfish : SelfishProcess, altruistic : AltruisticProcess, normal : NormalProcess, verbose = False):
+    def action(self, pop, world : World, selfish, altruistic, normal, verbose = False):
         if self.dead == True: # This is not the right way to do but no matter now
             return 'Rest'
         # DECISION PROCESS
