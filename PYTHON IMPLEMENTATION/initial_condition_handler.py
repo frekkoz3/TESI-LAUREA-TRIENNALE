@@ -9,6 +9,7 @@ class initial_condition_handler():
         self.density = init_conds["Active"]
         self.c_min = init_conds["C_Min"]
         self.c_max = init_conds["C_Max"]
+        self.c_regen = init_conds["C_Regen"]
         self.c_distr = init_conds["C_Distr"]
         self.world = self.world_handler()
 
@@ -26,7 +27,7 @@ class initial_condition_handler():
         self.costs = self.cost_handler()
 
     def world_handler(self):
-        world = World(self.width, self.height, cell_energy=(self.c_max+self.c_min)/2, parameters = {"energy" : 0, "minimum" : self.c_min, "maximum" : self.c_max, "regeneration" : self.c_max/10})
+        world = World(self.width, self.height, cell_energy=(self.c_max+self.c_min)/2, parameters = {"energy" : 0, "minimum" : self.c_min, "maximum" : self.c_max, "regeneration" : self.c_regen})
         # WELL THERE ARE SOME PARAMETERS WE SHOULD IMPLEMENT BEFORE 
         return world
 
