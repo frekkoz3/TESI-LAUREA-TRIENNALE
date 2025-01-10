@@ -1,3 +1,5 @@
+- Strange things happens in the upper-left corner -> OKAY THIS HAPPENS FOR THE REPRODUCTION HAHAH
+
 - IMPLEMENTING THE CONFLICT HANDLER
 we must even decide what happens during a space conflict
 

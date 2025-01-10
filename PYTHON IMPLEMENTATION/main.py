@@ -1,3 +1,10 @@
+"""
+    Author : Francesco Bredariol
+    Year : 2024/2025
+    This Project is done for the academic purpose of 
+    implementing the practical part of the Degree Thesis 
+    in Artificial Intelligence and Data Analytics.
+"""
 from graphics import *
 from elements import *
 from initial_condition_gui import *

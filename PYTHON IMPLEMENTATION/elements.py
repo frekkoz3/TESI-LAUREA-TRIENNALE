@@ -1,10 +1,17 @@
+"""
+    Author : Francesco Bredariol
+    Year : 2024/2025
+    This Project is done for the academic purpose of 
+    implementing the practical part of the Degree Thesis 
+    in Artificial Intelligence and Data Analytics.
+"""
 from excpts import *
 from decisions import *
 from common import *
 from action_handler import *
 import random
 
-BLANK_COLOR = (255, 255, 255)
+BLANK_COLOR = (245,245,220)
 CELL_PARAMS = {"energy" : 0, "minimum" : 0, "maximum" : 0, "regeneration" : 0}
 CELL_SIDE = 20
 
@@ -69,7 +76,10 @@ class World():
                 self.__cells__[i][j].update()
                 if self.__cells__[i][j].energy > 0:
                     active += 1
+        if active == 0:
+            return - 1 # This means all that the world is dead
         self.density = active/(self.length*self.height)
+        return 0
     
     def __getitem__(self, idx) -> Cell:
         if type(idx) is not list and type(idx) is not tuple:
@@ -107,15 +117,16 @@ class Individual():
         self.senility = max_age*3//4 # For now we set as follow
         self.dead = False
 
-    def update(self, pop):
+    def update(self):
         if self.energy <= 0 or self.age >= self.max_age:
             self.energy = 0
             self.dead = True
-            pop.death(self)
+            return self
         else:
             self.energy -= POSSIBILITIES[self.last_action]
             self.energy -= 1 # BASAL METABOLISM, TO IMPLEMENT
             self.age += 1
+            return None
     
     def action(self, pop, world : World, selfish, altruistic, normal, verbose = False):
         if self.dead == True: # This is not the right way to do but no matter now
@@ -206,15 +217,23 @@ class Population():
     
     def death(self, individual):
         # We will try if this actually work
-        #self.__individuals__.remove(individual)
-        pass
+        self.__individuals__.remove(individual)
     
     def update(self, world : World, verbose = False):
         for i in range (len(self.__individuals__)):
             self.__individuals__[i].action(self, world, self.selfish_process, self.altruistic_process, self.normal_process, verbose)
             # HERE WE MUST think at the conflicts, do not worry now 
             # MAYBE they are already thinked in the processes system but i don't think 
+
+        Dead = []
         for i in range (len(self.__individuals__)):
-            self.__individuals__[i].update(self)
-            # Not sure the individual death works
+            ind = self.__individuals__[i].update()
+            if ind != None:
+                Dead.append(ind)
+        for i in range (len(Dead)):
+            self.death(Dead[i])
+
+        if len(self.__individuals__) == 0:
+            return -1 # This means the population is all dead
+        return 0
         

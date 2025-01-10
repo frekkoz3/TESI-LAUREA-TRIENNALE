@@ -1,3 +1,10 @@
+"""
+    Author : Francesco Bredariol
+    Year : 2024/2025
+    This Project is done for the academic purpose of 
+    implementing the practical part of the Degree Thesis 
+    in Artificial Intelligence and Data Analytics.
+"""
 from abc import ABC, abstractmethod
 from action_handler import *
 from common import *

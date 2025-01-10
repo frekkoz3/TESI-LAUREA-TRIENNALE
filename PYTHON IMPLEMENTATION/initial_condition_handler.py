@@ -1,3 +1,10 @@
+"""
+    Author : Francesco Bredariol
+    Year : 2024/2025
+    This Project is done for the academic purpose of 
+    implementing the practical part of the Degree Thesis 
+    in Artificial Intelligence and Data Analytics.
+"""
 from elements import *
 import random
 
@@ -49,7 +56,8 @@ class initial_condition_handler():
         # This is needed to obtain unique positions
         for i in range (self.size):
             while position.count(position[i]) > 1:
-                position[i] = [[random.randrange(0, self.height), random.randrange(0, self.width)] for _ in range (self.size)]
+                position[i] = [random.randrange(0, self.height), random.randrange(0, self.width)]
+
         social_params = [Params[self.p_distr] for _ in range (self.size)] # WE SHOULD TWEAK THIS A BIT WITH SOME RANDOM FLUTTUATION
         population = Population([Individual(max_ages[i], birth_energies[i], max_energies[i], social_params[i], position[i]) for i in range (self.size)])
         return population

@@ -1,8 +1,33 @@
+"""
+    Author : Francesco Bredariol
+    Year : 2024/2025
+    This Project is done for the academic purpose of 
+    implementing the practical part of the Degree Thesis 
+    in Artificial Intelligence and Data Analytics.
+"""
 import pygame
 import sys
 from elements import *
+import tkinter as tk
+from tkinter import messagebox
 
+SCREEN_WIDTH = 400
+SCREEN_HEIGHT = 600
 BAR_HEIGHT = 100
+
+BACKGROUND_COLOR = (245,245,220)
+
+FPS = 10
+
+def write_report():
+    pass
+
+# For the message dialog window 
+def message_dialog(text):
+            root = tk.Tk()
+            root.withdraw()  # This is done to hide the root
+            messagebox.showinfo("Message", text)
+            root.destroy()
 
 # Draw the grid
 def draw_world(screen, grid_world : World):
@@ -22,12 +47,15 @@ def draw_population(screen, pop : Population):
         pygame.draw.circle(screen, color, (x*side + side/2, y*side + side/2), side/2)
 
 # Draw the statistics bar
-def draw_stats(screen, pop : Population, world : World):
-    # Draw stats bar
-    WIDTH, HEIGHT = world.length * world.cell_side , world.height * world.cell_side
-    pygame.draw.rect(screen, (0, 55, 180), pygame.Rect(0, HEIGHT, WIDTH, BAR_HEIGHT))
+def draw_stats(screen, pop : Population, world : World, camera_x, camera_y, zoom_level):
 
-    font = pygame.font.Font(None, 28)
+    font = pygame.font.Font(None, 18)
+
+    # Draw the graphic stats
+    camera_text = font.render(f"({int(camera_x)}, {int(camera_y)})", True, (0, 0, 0))
+    zoom_text = font.render(f"{zoom_level:.2f}x", True, (0, 0, 0))
+    screen.blit(camera_text, (10, SCREEN_HEIGHT - BAR_HEIGHT - 30))
+    screen.blit(zoom_text, (SCREEN_WIDTH - 40, SCREEN_HEIGHT - BAR_HEIGHT - 30))
 
     # For now we don't have real statistic, we are just trying to have the bar
     health_text = font.render(f"POPULATION SIZE", True, (200, 255, 255))
@@ -35,9 +63,9 @@ def draw_stats(screen, pop : Population, world : World):
     fps_text = font.render(f"AVG ENERGY", True,  (200, 255, 255))
 
     # This is done to actually "print"
-    screen.blit(health_text, (10, HEIGHT + 10))
-    screen.blit(score_text, (10, HEIGHT + 40))
-    screen.blit(fps_text, (10, HEIGHT + 70))
+    screen.blit(health_text, (10, SCREEN_HEIGHT - BAR_HEIGHT + 10))
+    screen.blit(score_text, (10, SCREEN_HEIGHT - BAR_HEIGHT + 40))
+    screen.blit(fps_text, (10, SCREEN_HEIGHT - BAR_HEIGHT + 70))
 
 # Main game loop
 def play(pop : Population, world : World, verbose = False):
@@ -46,13 +74,27 @@ def play(pop : Population, world : World, verbose = False):
 
     # Screen setup
     WIDTH, HEIGHT = world.length * world.cell_side , world.height * world.cell_side
-    TOTAL_HEIGHT = HEIGHT + BAR_HEIGHT
-    screen = pygame.display.set_mode((WIDTH, TOTAL_HEIGHT))
-    pygame.display.set_caption("PyGame Sketch")
+
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    pygame.display.set_caption("SOCIAL SIMULATION")
+
+    w_surface = pygame.Surface((WIDTH, HEIGHT))
+    
     clock = pygame.time.Clock()
 
     # Add screen dimensions to `something`
     grid_world = world
+
+    # Camera position
+    camera_x, camera_y = 0, 0
+
+    # Zoom level
+    zoom_level = 1.0
+    min_zoom, max_zoom = 0.5, 2.0  # Set zoom limits
+
+    # Dragging state
+    dragging = False
+    last_mouse_pos = (0, 0)
 
     t = 0
     while True:
@@ -61,26 +103,87 @@ def play(pop : Population, world : World, verbose = False):
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            # THIS IS DONE FOR THE CAMERA
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:  # Left mouse button
+                    dragging = True
+                    last_mouse_pos = event.pos
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if event.button == 1:  # Left mouse button
+                    dragging = False
+            elif event.type == pygame.MOUSEMOTION:
+                if dragging:
+                    # Calculate the difference in mouse movement
+                    dx, dy = event.pos[0] - last_mouse_pos[0], event.pos[1] - last_mouse_pos[1]
+                    # Update camera position
+                    camera_x -= dx
+                    camera_y -= dy
+                    # Clamp the camera position to stay within the world bounds
+                    camera_x = max(0, min(camera_x, WIDTH - SCREEN_WIDTH))
+                    camera_y = max(0, min(camera_y, HEIGHT - SCREEN_HEIGHT))
+                    # Update the last mouse position
+                    last_mouse_pos = event.pos
+            # THIS IS DONE FOR THE ZOOM
+            elif event.type == pygame.MOUSEWHEEL:
+                # Adjust zoom level
+                old_zoom = zoom_level
+                zoom_level += event.y * 0.1
+                zoom_level = max(min_zoom, min(max_zoom, zoom_level))  # Clamp zoom level
+                
+                # Adjust camera position to zoom in/out towards the mouse pointer
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                world_mouse_x = camera_x + mouse_x / old_zoom
+                world_mouse_y = camera_y + mouse_y / old_zoom
+                camera_x = world_mouse_x - (mouse_x / zoom_level)
+                camera_y = world_mouse_y - (mouse_y / zoom_level)
 
+                # Clamp the camera position
+                camera_x = max(0, min(camera_x, WIDTH - SCREEN_WIDTH / zoom_level))
+                camera_y = max(0, min(camera_y, HEIGHT - SCREEN_HEIGHT / zoom_level))
+        
         # Clear the screen
-        screen.fill((255, 255, 255))
+        screen.fill((0, 0, 0, 0))
 
         # Call the drawing functions
-        draw_world(screen, grid_world)
-        draw_population(screen, pop)
+        draw_world(w_surface, grid_world)
+        draw_population(w_surface, pop)
 
-        pop.update(world, verbose)
-        world.update()
+        errn = pop.update(world, verbose)
+
+        if errn == -1:
+            message_dialog("Population Dead")
+            write_report()
+            pygame.quit()
+            sys.exit()
+
+        errn = world.update()
+        if errn == -1:
+            message_dialog("World Dead")
+            write_report()
+            pygame.quit()
+            sys.exit()
+
+        # Scale the world surface for zoom
+        scaled_world = pygame.transform.smoothscale(
+            w_surface, 
+            (int(WIDTH * zoom_level), int(HEIGHT * zoom_level))
+        )
+        screen.blit(scaled_world, (0, 0), (camera_x * zoom_level, camera_y * zoom_level, SCREEN_WIDTH, SCREEN_HEIGHT))
+        
+        # This is the stats bar
+        stat_bar = pygame.Surface((SCREEN_WIDTH, BAR_HEIGHT))
+        stat_bar.fill((65,105,225))
+        screen.blit(stat_bar, (0, SCREEN_HEIGHT - BAR_HEIGHT))
 
         # Drawing the stats
-        draw_stats(screen, pop, grid_world)
+        draw_stats(screen, pop, grid_world, camera_x*zoom_level//CELL_SIDE, camera_y*zoom_level//CELL_SIDE, zoom_level)        
 
         # Update the display
         pygame.display.flip()
 
         # Increment time and regulate frame rate
         t += 1
-        clock.tick(2)
+        clock.tick(FPS)
 
 # Entry point
 if __name__ == "__main__":
