@@ -36,6 +36,8 @@ class SelfishProcess(DecisionalProcess):
         # POSITION OF THE INDIVIDUAL AND FOOD POSITION
         pos = individual.position
         food = world.asList()
+        if len(list(food)) == 0:
+            return 'Rest'
         # EAT IF POSSIBLE
         if tuple(pos) in list(food) and individual.energy < individual.max_energy/2:
             to_eat = individual.max_energy - individual.energy
