@@ -185,7 +185,7 @@ class Individual():
         pass
 
     def get_color(self):
-        return (min(255, 255*(1-self.energy/self.max_energy)), 0, 0)
+        return (min(max(0, 255*self.selfishness_param), 255), min(max(0, 255*self.altruism_param), 255), min(max(0, 255*self.normality_param), 255))
 
         
 class Population():

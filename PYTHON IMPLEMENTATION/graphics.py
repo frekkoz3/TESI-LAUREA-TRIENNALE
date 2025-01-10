@@ -19,7 +19,7 @@ def draw_population(screen, pop : Population):
     for individual in pop:
         x, y = individual.position
         color = individual.get_color()
-        pygame.draw.rect(screen, color, pygame.Rect(x*side, y*side, side, side))
+        pygame.draw.circle(screen, color, (x*side + side/2, y*side + side/2), side/2)
 
 # Draw the statistics bar
 def draw_stats(screen, pop : Population, world : World):
