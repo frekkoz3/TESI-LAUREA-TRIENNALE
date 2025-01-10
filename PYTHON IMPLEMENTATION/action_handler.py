@@ -5,7 +5,7 @@
     implementing the practical part of the Degree Thesis 
     in Artificial Intelligence and Data Analytics.
 """
-from elements import *
+
 class ActionHandler():
 
     def __init__(self):
@@ -35,7 +35,4 @@ class ActionHandler():
         return False # Default (why not?)
 
 if __name__ == "__main__":
-    world = World(10, 10)
-    print(world.asList())
-    f = tuple([0, 0]) in world.asList()
-    print(f)
+    pass
