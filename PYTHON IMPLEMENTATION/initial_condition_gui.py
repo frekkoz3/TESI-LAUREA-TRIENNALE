@@ -44,7 +44,7 @@ def load_from_file(entries):
     )
     actual_dict = {}
     if file_path:
-        # Write some content to the chosen file
+        # It is a binary file!
         with open(file_path, 'rb') as file:
             actual_dict = pickle.load(file)
     
@@ -110,8 +110,12 @@ def inital_condition_GUI():
                 entries[key].set(lower)
                 entries[key].grid(row = i, column = 1 + col_offset, padx = 10, pady = 3)
     
+    # COLUMNS PART
+
     generate_column(col1, lab_col1, spinboxes, dropdown, 0)
     generate_column(col2, lab_col2, spinboxes, dropdown, 3)
+
+    # BUTTON PART
 
     actual_row = max(len(list(col1.keys())*2), len(list(col2.keys())*2))
     save_button = tk.Button(root, text="Save File", command=lambda: save_as_file(entries))

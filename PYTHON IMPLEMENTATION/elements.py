@@ -124,6 +124,7 @@ class Individual():
         selfish_decision = selfish.decision(self, pop, world)
         altruistic_decision = altruistic.decision(self, pop, world)
         normal_decision = normal.decision(self, pop, world)
+        actual_decision = "Rest"
         # SAMPLE PROCESS
         sample = random.uniform(0, 1)
         if sample < self.selfishness_param:
@@ -132,7 +133,6 @@ class Individual():
             actual_decision = altruistic_decision
         else:
             actual_decision = normal_decision
-        actual_decision = selfish_decision  # WELL THE SAMPLE IS TO IMPLEMENT
         # ACTION PROCESS
         split_decision = actual_decision.split("_")
         if split_decision[0] == 'Move':
