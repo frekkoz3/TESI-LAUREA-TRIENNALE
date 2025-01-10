@@ -1,9 +1,10 @@
 from graphics import *
 from elements import *
+from initial_condition_gui import *
+from initial_condition_handler import *
+from common import POSSIBILITIES
 
 if __name__ == "__main__":
-    LENGHT = 20
-    HEIGHT = 20
-    pop = Population(5, initial_position=[[10, 10], [0, 0], [19, 19], [2, 3], [5, 18]])
-    world = World(LENGHT, HEIGHT, density = 0.1)
+    data = inital_condition_GUI()
+    pop, world, POSSIBILITIES = initial_condition_handler(data).begin()
     play(pop, world)

@@ -174,7 +174,7 @@ class Individual():
         mutation_1 = random.uniform(-0.1, 0.1)
         mutation_2 = random.uniform(-0.1, 0.1)
         mutation_3 = - (mutation_1 + mutation_2)
-        son_social_param = [self.selfishness_param - mutation_1, self.altruism_param - mutation_2, self.normality_param - mutation_3]
+        son_social_param = [self.selfishness_param - mutation_1, self.altruism_param - mutation_2, self.normality_param - mutation_3] # THIS IS A MESS
         age_mutation = random.randrange(-10, 10)
         son_max_age = self.max_age + age_mutation     
         son = Individual(social_param=son_social_param, max_age=son_max_age) # We should implement a lot of think here, don't worry for now
@@ -190,10 +190,10 @@ class Individual():
         
 class Population():
 
-    def __init__(self, initial_population_size, initial_position):
+    def __init__(self, initial_population):
         # For now the processes stay here
         self.cell_side = CELL_SIDE
-        self.__individuals__ = [Individual(position=initial_position[i]) for i in range (initial_population_size)]
+        self.__individuals__ = initial_population
         self.selfish_process = SelfishProcess()
         self.altruistic_process = AltruisticProcess()
         self.normal_process = NormalProcess()
