@@ -1,8 +1,5 @@
 - Strange things happens in the upper-left corner -> OKAY THIS HAPPENS FOR THE REPRODUCTION HAHAH
 
-- IMPLEMENTING THE CONFLICT HANDLER
-we must even decide what happens during a space conflict
-
 - ALL THE INITIAL DISTRIBUTION MUST BE IMPLEMENTED IN THEIR CORRISPECTIVE CLASS NON IN THE INITIAL_CONDITION_HANDLER
 
 - IMPLEMENTING THE DECISION PROCESSES
@@ -19,11 +16,7 @@ right now it does not work properly
 for every run we must give an easy report schedule into a file
 we must decide statistic we want to store
 
-- POSSIBLY WE CAN ADD SOME COOL SPRITES 
-
 - THINK AT THE -off-graphic SIMULATION (what if we have milion of individual? we can't visualize everything)
-(we should be able both of fixing the focus on a part of the world and then scroll with the mouse and 
-just seeing the stats in real time)
 
 - PROBABLY PARALLELIZE EVERYTHING
 Not so happy but when you know you know

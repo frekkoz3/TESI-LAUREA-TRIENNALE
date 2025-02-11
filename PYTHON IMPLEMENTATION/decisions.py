@@ -31,7 +31,7 @@ class SelfishProcess(DecisionalProcess):
     def decision(self, individual, population, world):
         # We have to develop a simple rule model to implement a "selfish decision process"
         action = random.choice(list(POSSIBILITIES.keys()))
-        while not self.action_checker.legitimacy(action, individual, population, world):
+        while not self.action_checker.legitimacy(action, individual, world):
             action = random.choice(list(POSSIBILITIES.keys()))
         # POSITION OF THE INDIVIDUAL AND FOOD POSITION
         pos = individual.position
@@ -62,7 +62,7 @@ class AltruisticProcess(DecisionalProcess):
     def decision(self, individual, population, world):
         # We have to develop a simple rule model to implement a "altruistic decision process"
         action = random.choice(list(POSSIBILITIES.keys()))
-        while not self.action_checker.legitimacy(action, individual, population, world):
+        while not self.action_checker.legitimacy(action, individual, world):
             action = random.choice(list(POSSIBILITIES.keys()))
         return action
     
@@ -71,7 +71,7 @@ class NormalProcess(DecisionalProcess):
     def decision(self, individual, population, world):
         # We have to develop a simple rule model to implement a "normal decision process"
         action = random.choice(list(POSSIBILITIES.keys()))
-        while not self.action_checker.legitimacy(action, individual, population, world):
+        while not self.action_checker.legitimacy(action, individual, world):
             action = random.choice(list(POSSIBILITIES.keys()))
         return action
 

@@ -78,11 +78,11 @@ def play(pop : Population, world : World, verbose = False):
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("SOCIAL SIMULATION")
 
+    # This is the surface where we draw the world
     w_surface = pygame.Surface((WIDTH, HEIGHT))
     
     clock = pygame.time.Clock()
 
-    # Add screen dimensions to `something`
     grid_world = world
 
     # Camera position
@@ -101,6 +101,7 @@ def play(pop : Population, world : World, verbose = False):
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                write_report()
                 pygame.quit()
                 sys.exit()
             # THIS IS DONE FOR THE CAMERA
@@ -148,6 +149,7 @@ def play(pop : Population, world : World, verbose = False):
         draw_world(w_surface, grid_world)
         draw_population(w_surface, pop)
 
+        # Update population and world
         errn = pop.update(world, verbose)
 
         if errn == -1:
@@ -163,7 +165,7 @@ def play(pop : Population, world : World, verbose = False):
             pygame.quit()
             sys.exit()
 
-        # Scale the world surface for zoom
+        # This is needed to scale the world surface based on the zoom
         scaled_world = pygame.transform.smoothscale(
             w_surface, 
             (int(WIDTH * zoom_level), int(HEIGHT * zoom_level))

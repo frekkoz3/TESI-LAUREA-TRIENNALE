@@ -128,6 +128,11 @@ class Individual():
             self.age += 1
             return None
     
+    def die(self):
+        self.energy = 0
+        self.dead = True
+        return self
+    
     def action(self, pop, world : World, selfish, altruistic, normal, verbose = False):
         if self.dead == True: # This is not the right way to do but no matter now
             return 'Rest'
@@ -232,6 +237,28 @@ class Population():
                 Dead.append(ind)
         for i in range (len(Dead)):
             self.death(Dead[i])
+        
+        # COLLISION: the weaker die
+        Dead = []
+        for i in range (len(self.__individuals__)):
+            for j in range(i + 1, len(self.__individuals__)):
+                ind_i = self.__individuals__[i]
+                ind_j = self.__individuals__[j]
+                if ind_i.position == ind_j.position:
+                    tie = ind_i if random.uniform(0, 1) < 0.5 else ind_j # Tie break
+                    if ind_i.energy > ind_j.energy:
+                        Dead.append(ind_j.die())
+                    elif ind_j.energy > ind_i.energy:
+                        Dead.append(ind_i.die())
+                    else:
+                        Dead.append(tie.die())
+
+        # This trick is done to avoid multiple dead (can occours in the init)
+        Dead = list(set(Dead))
+
+        for i in range (len(Dead)):
+            self.death(Dead[i])
+
 
         if len(self.__individuals__) == 0:
             return -1 # This means the population is all dead
