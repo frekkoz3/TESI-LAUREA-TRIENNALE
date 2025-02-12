@@ -138,11 +138,11 @@ def play(pop : Population, world : World, verbose = False):
                 camera_y = world_mouse_y - (mouse_y / zoom_level)
 
                 # Clamp the camera position
-                camera_x = max(0, min(camera_x, WIDTH - SCREEN_WIDTH / zoom_level))
-                camera_y = max(0, min(camera_y, HEIGHT - SCREEN_HEIGHT / zoom_level))
+                camera_x = max(0, min(camera_x, WIDTH - SCREEN_WIDTH/zoom_level))
+                camera_y = max(0, min(camera_y, HEIGHT - SCREEN_HEIGHT/zoom_level))
         
         # Clear the screen
-        screen.fill((0, 0, 0, 0))
+        screen.fill((255, 255, 255, 255))
 
         # Call the drawing functions
         draw_world(w_surface, grid_world)
