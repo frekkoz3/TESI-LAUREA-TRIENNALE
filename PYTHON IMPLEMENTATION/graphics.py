@@ -57,8 +57,10 @@ def draw_stats(screen, pop : Population, world : World, camera_x, camera_y, zoom
     screen.blit(camera_text, (10, SCREEN_HEIGHT - BAR_HEIGHT - 30))
     screen.blit(zoom_text, (SCREEN_WIDTH - 40, SCREEN_HEIGHT - BAR_HEIGHT - 30))
 
+    pop_size = pop.alive()
+
     # For now we don't have real statistic, we are just trying to have the bar
-    health_text = font.render(f"POPULATION SIZE", True, (200, 255, 255))
+    health_text = font.render(f"POPULATION SIZE {pop_size}", True, (200, 255, 255))
     score_text = font.render(f"CELL SIZE", True, (200, 255, 255))
     fps_text = font.render(f"AVG ENERGY", True,  (200, 255, 255))
 

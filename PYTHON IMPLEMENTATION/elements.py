@@ -186,15 +186,27 @@ class Individual():
         self.energy = min(self.energy + cell.release_energy(request), self.max_energy)
 
     def reproduce(self, pop):
+        # To reproduce we are guaranteed to have 4 free cells in our neighbourhood
         # This should implement the classical evolution scheme
+        # SOCIAL PARAM MUTATION
         mutation_1 = random.uniform(-0.1, 0.1)
         mutation_2 = random.uniform(-0.1, 0.1)
         mutation_3 = - (mutation_1 + mutation_2)
-        son_social_param = [self.selfishness_param - mutation_1, self.altruism_param - mutation_2, self.normality_param - mutation_3] # THIS IS A MESS
-        age_mutation = random.randrange(-10, 10)
-        son_max_age = self.max_age + age_mutation     
-        son = Individual(social_param=son_social_param, max_age=son_max_age) # We should implement a lot of think here, don't worry for now
-        self.energy = self.energy//2 # This parameter is to tweak
+        son_social_param = [self.selfishness_param + mutation_1, self.altruism_param + mutation_2, self.normality_param + mutation_3] # THIS IS A MESS but work
+        # AGE MUTATION
+        age_mutation = random.uniform(0.9, 1.1)
+        son_max_age = int(age_mutation*self.max_age)
+        # BIRTH POSITION
+        directions = { 1 : [0, 1], 2 : [0, -1], 3 : [-1, 0], 4 : [1, 0] }
+        r_dir = random.randint(1, 4)
+        son_position = [self.position[0] + directions[r_dir][0] , self.position[1] + directions[r_dir][1]]
+        # BIRTH ENERGY
+        son_energy = self.energy//4
+        # MAX ENERGY 
+        energy_mutation = random.uniform(0.9, 1.1)
+        son_max_energy = self.max_energy * energy_mutation
+        son = Individual( max_age=son_max_age, birth_energy=son_energy, max_energy=son_max_energy, position=son_position, social_param=son_social_param) # We should implement a lot of think here, don't worry for now
+        self.energy = 3*self.energy//4 # This parameter is to tweak
         pop.birth(son)
 
     def pollute(self):
@@ -262,5 +274,10 @@ class Population():
 
         if len(self.__individuals__) == 0:
             return -1 # This means the population is all dead
+        for ind in self.__individuals__:
+            print(ind.position)
         return 0
+
+    def alive(self):
+        return len(self.__individuals__)
         

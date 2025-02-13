@@ -11,15 +11,18 @@ import random
 class initial_condition_handler():
 
     def __init__(self, init_conds):
+        # World param
         self.height = init_conds["Height"]
         self.width = init_conds["Width"]
+        # Cell params
         self.density = init_conds["Active"]
         self.c_min = init_conds["C_Min"]
         self.c_max = init_conds["C_Max"]
         self.c_regen = init_conds["C_Regen"]
         self.c_distr = init_conds["C_Distr"]
         self.world = self.world_handler()
-
+        
+        # Pop params
         self.size = init_conds["Size"]
         self.i_energy = init_conds["I_Energy"]
         self.i_age = init_conds["I_Age"]
@@ -27,6 +30,7 @@ class initial_condition_handler():
         self.p_distr = init_conds["P_Distr"]
         self.population = self.individual_handler()
 
+        # Cost params
         self.move_cost = init_conds["Move"]
         self.eat_cost = init_conds["Eat"]
         self.rest_cost = init_conds["Rest"]

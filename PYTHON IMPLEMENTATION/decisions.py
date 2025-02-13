@@ -62,6 +62,11 @@ class AltruisticProcess(DecisionalProcess):
     def decision(self, individual, population, world):
         # We have to develop a simple rule model to implement a "altruistic decision process"
         action = random.choice(list(POSSIBILITIES.keys()))
+        possible_action = []
+        for a in (list(POSSIBILITIES.keys())):
+            if self.action_checker.legitimacy(a, individual, world):
+                possible_action.append(a)
+        print(possible_action)
         while not self.action_checker.legitimacy(action, individual, world):
             action = random.choice(list(POSSIBILITIES.keys()))
         return action
