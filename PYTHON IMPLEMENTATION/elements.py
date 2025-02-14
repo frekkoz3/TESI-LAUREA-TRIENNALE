@@ -7,13 +7,13 @@
 """
 from excpts import *
 from decisions import *
-from common import *
 from action_handler import *
 import random
 
-BLANK_COLOR = (245,245,220)
+BLANK_COLOR = (210,250,250)
 CELL_PARAMS = {"energy" : 0, "minimum" : 0, "maximum" : 0, "regeneration" : 0}
 CELL_SIDE = 20
+COSTS = {'Move_N' : 1, 'Move_W' : 1, 'Move_S' : 1, 'Move_E' : 1, 'Rest' : 0.1, 'Eat_1' : 0.1, 'Reproduce' : 5, 'Pollute' : 0.2}
 
 class Cell():
 
@@ -44,12 +44,12 @@ class Cell():
             return BLANK_COLOR
         # For the color visualization we will have to think about it
         if self.energy < self.minimum_energy_level:
-            return (255*(self.energy/self.minimum_energy_level), 255, 255)
-        return (0, 255*(self.energy/self.maximum_energy_level), 0)
+            return (255, 255*(self.energy/self.minimum_energy_level), 125)
+        return (255, 255*(self.energy/self.maximum_energy_level), 0)
 
 class World():
 
-    def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, density = 0.1):
+    def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, density = 0.1, costs = COSTS):
         # The density parameter tell the portion of cells that should be activate
         self.length = length
         self.height = height
@@ -57,6 +57,8 @@ class World():
         self.__cells__ = [[Cell(parameters) for l in range (length)] for h in range (height)]
         self.density = density
         self.cell_side = CELL_SIDE
+        self.active = 0
+        self.costs = costs
         self.populate()
     
     def populate(self):
@@ -70,15 +72,15 @@ class World():
             self.__cells__[idx//self.length][idx%self.height].charge_energy(self.cell_energy)
 
     def update(self):
-        active = 0
+        self.active = 0
         for i in range(self.length):
             for j in range(self.height):
                 self.__cells__[i][j].update()
                 if self.__cells__[i][j].energy > 0:
-                    active += 1
-        if active == 0:
+                    self.active += 1
+        if self.active == 0:
             return - 1 # This means all that the world is dead
-        self.density = active/(self.length*self.height)
+        self.density = self.active/(self.length*self.height)
         return 0
     
     def __getitem__(self, idx) -> Cell:
@@ -117,14 +119,27 @@ class Individual():
         self.senility = max_age*3//4 # For now we set as follow
         self.dead = False
 
-    def update(self):
+    def update(self, costs):
         if self.energy <= 0 or self.age >= self.max_age:
             self.energy = 0
             self.dead = True
             return self
         else:
-            self.energy -= POSSIBILITIES[self.last_action]
-            self.energy -= 1 # BASAL METABOLISM, TO IMPLEMENT
+            self.energy -= costs[self.last_action] # cost of the last action taken
+            """
+                BASAL METABOLISM - quadratic formula (an alternative could be a lorentzian)
+                Am = Maximum Age
+                Em = Maximum Energy
+                k (in [0, 1]) = Maximum ratio of Em requested by the Metabolism (we have the y_vertex here)
+                Resolving imposing x(0) = 0, x(Am) = 0 and Vertex in (Am/2, kEm) we obtain the following parameters
+                    a = -(4*k*Em)/(Am^2), b = (4*k*Em)/(Am), c = 0
+
+            """
+            Am = self.max_age
+            Em = self.max_energy
+            k = 0.02 # PARAMETERS THAT CAN BE TWEAK
+            metabolism = self.age*(-(4*k*Em/(Am*Am))*self.age + (4*k*Em/Am)) # x(ax + b)
+            self.energy -= metabolism
             self.age += 1
             return None
     
@@ -244,7 +259,7 @@ class Population():
 
         Dead = []
         for i in range (len(self.__individuals__)):
-            ind = self.__individuals__[i].update()
+            ind = self.__individuals__[i].update(world.costs)
             if ind != None:
                 Dead.append(ind)
         for i in range (len(Dead)):
@@ -271,11 +286,9 @@ class Population():
         for i in range (len(Dead)):
             self.death(Dead[i])
 
-
         if len(self.__individuals__) == 0:
             return -1 # This means the population is all dead
-        for ind in self.__individuals__:
-            print(ind.position)
+        
         return 0
 
     def alive(self):

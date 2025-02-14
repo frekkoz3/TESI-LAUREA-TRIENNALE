@@ -1,22 +1,18 @@
-- Strange things happens in the upper-left corner -> OKAY THIS HAPPENS FOR THE REPRODUCTION HAHAH
-
-- PROBLEMS WITH THE ACTION HANDLERS!
-
-- ALL THE INITIAL DISTRIBUTION MUST BE IMPLEMENTED IN THEIR CORRISPECTIVE CLASS NON IN THE INITIAL_CONDITION_HANDLER
-
 - IMPLEMENTING THE DECISION PROCESSES
 idea of the communication level
 this is pretty huge in fact
 
-- IMPLEMENTING THE BASAL METABOLISM
-I forgot lol
-
-- IMLPEMENTING A GOOD MUTATION SISTEM
-right now it does not work properly
+- IMPLEMENTING THE NEIGHBOURHOOD SYSTEM for the DECISION
+- IMPLEMENTING THE KNOWLEDGE DISTRIBUTION for the decision
+- remember to have two different decision protocol
 
 - IMPLEMENTING A REPORT SCHEDULE
 for every run we must give an easy report schedule into a file
 we must decide statistic we want to store
+
+- THINK IF IMPOSING THE CORRELATION SON - FATHER
+
+- ALL THE INITIAL DISTRIBUTION MUST BE IMPLEMENTED IN THEIR CORRISPECTIVE CLASS NON IN THE INITIAL_CONDITION_HANDLER
 
 - THINK AT THE -off-graphic SIMULATION (what if we have milion of individual? we can't visualize everything)
 

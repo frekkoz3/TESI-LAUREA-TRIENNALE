@@ -18,11 +18,11 @@ class ActionHandler():
         y = individual.position[0]
         split_actions = action.split("_")
         if split_actions[0] == 'Move':
-            new_x = x + 1 if split_actions[1] == 'W' else x 
-            new_x = new_x - 1 if split_actions[1] == 'E' else new_x
+            new_x = x - 1 if split_actions[1] == 'W' else x 
+            new_x = new_x + 1 if split_actions[1] == 'E' else new_x
             new_y = y + 1 if split_actions[1] == 'S' else y
             new_y = new_y - 1 if split_actions[1] == 'N' else new_y
-            return new_y > 1 and new_y < y_lim - 1 and new_x > 1 and new_x < x_lim - 1 # we just check if the space is possible, not if the space is occuped. 
+            return new_y >= 0 and new_y <= y_lim and new_x >= 0 and new_x <= x_lim # we just check if the space is possible, not if the space is occuped. 
         if split_actions[0] == 'Rest':
             return True # Someone can always rest for now
         if split_actions[0] == 'Reproduce': 
