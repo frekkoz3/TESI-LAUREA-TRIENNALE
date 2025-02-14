@@ -10,7 +10,7 @@ from decisions import *
 from action_handler import *
 import random
 
-BLANK_COLOR = (210,250,250)
+BLANK_COLOR = (210,240,240)
 CELL_PARAMS = {"energy" : 0, "minimum" : 0, "maximum" : 0, "regeneration" : 0}
 CELL_SIDE = 20
 COSTS = {'Move_N' : 1, 'Move_W' : 1, 'Move_S' : 1, 'Move_E' : 1, 'Rest' : 0.1, 'Eat_1' : 0.1, 'Reproduce' : 5, 'Pollute' : 0.2}
