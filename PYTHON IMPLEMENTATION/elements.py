@@ -9,6 +9,8 @@ from excpts import *
 from decisions import *
 from action_handler import *
 import random
+import math
+from vector import *
 
 BLANK_COLOR = (210,240,240)
 CELL_PARAMS = {"energy" : 0, "minimum" : 0, "maximum" : 0, "regeneration" : 0}
@@ -46,7 +48,47 @@ class Cell():
         if self.energy < self.minimum_energy_level:
             return (255, 255*(self.energy/self.minimum_energy_level), 125)
         return (255, 255*(self.energy/self.maximum_energy_level), 0)
+    
+    def __str__(self):
+        return f"{self.energy}"
 
+class Information():
+    # This Object store the information transmitted by others
+    def __init__(self):
+        """
+            The value can be of 2 type:
+            None -> no information is known
+            Vector -> this is a vector that hints where the food is : if infty is the vector magnitude an individual is present
+        """
+        self.vectors = []
+        self.value = None
+    
+    def write(self, vec : Vector):
+        self.vectors.append(vec)
+    
+    def process(self):
+        # THE PROCESS COMPUTE THE WEIGHTED MEAN BY THE NORMS OF THE VECTORS 
+        if self.vectors == []: #This is the case where no information is stored
+            self.value = None 
+        elif float("inf") in self.vectors: # This is the case where an individual is located in an information cell
+            self.value = -float("inf") 
+        else: # This is the case where a position is free and there are more vectors stored.  We do a weigthed sum of the vectors
+            norms_sum = sum([v.norm() for v in self.vectors]) 
+            vectors_sum = Vector(0, 0)
+            for v in self.vectors:
+                vectors_sum += v*v.norm()
+            self.value = vectors_sum*(1/norms_sum) if norms_sum != 0 else float("inf") # If there is a food the value will be of + infinity 
+
+    def read(self):
+        return self.value
+    
+    def __str__(self):
+        if self.value == None:
+            return "N"
+        if self.value == -float("inf"):
+            return "O"
+        return f"{self.value}"
+    
 class World():
 
     def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, density = 0.1, costs = COSTS):
@@ -59,6 +101,7 @@ class World():
         self.cell_side = CELL_SIDE
         self.active = 0
         self.costs = costs
+        self.information_layer = [[Information() for l in range (length)] for h in range (height)]
         self.populate()
     
     def populate(self):
@@ -81,6 +124,7 @@ class World():
         if self.active == 0:
             return - 1 # This means all that the world is dead
         self.density = self.active/(self.length*self.height)
+        self.reset_information()
         return 0
     
     def __getitem__(self, idx) -> Cell:
@@ -100,6 +144,64 @@ class World():
                 if self.__cells__[i][j].energy > 0:
                     idxs.append((i, j))
         return idxs
+    
+    def __str__(self):
+        s = ""
+        for r in self.__cells__:
+            for c in r:
+                s += f"{c} "
+            s+="\n"
+        return s
+
+    def get_neighbourhood_clip(self, center, radius):
+        # This function return the clipped values of the neighbourhood
+        min_y = max(0, center[0] - radius)
+        min_x = max(0, center[1] - radius)
+        max_y = min(self.height, center[0] + radius + 1)
+        max_x = min(self.length, center[1] + radius + 1)
+        return min_y, min_x, max_y, max_x
+    
+    def get_neighbourhood(self, center, radius):
+        # This function "clip" the neighbourhood to the world border
+        min_y, min_x, max_y, max_x = self.get_neighbourhood_clip(center, radius)
+        return [[c for c in r[min_x:max_x]] for r in self.__cells__[min_y : max_y]]    
+    
+    # This methods work on the information layer
+    def get_information(self):
+        return self.information_layer
+    
+    def write_communication(self, communication):
+        # The communication is a block of vectors (or None) passed by some decisional processes
+        # They must be added in the right position of the information layer
+        min_y, min_x, max_y, max_x, block = communication
+        if block == []:
+            return
+        for i in range (min_y, max_y): # We will check on this values (maybe add a +1 is needed)
+            for j in range (min_x, max_x):
+                self.information_layer[i][j].write(block[i-min_y][j-min_x])
+
+    def process_information(self):
+        # This is the processing work 
+        for r in self.information_layer:
+            for i in r:
+                i.process()
+
+    def print_information(self):
+        for i, r in enumerate(self.information_layer):
+            for j, inf in enumerate(r):
+                print(f"{self.information_layer[j][i]} ", end="")
+            print("")
+    
+    def reset_information(self):
+        self.information_layer = [[Information() for l in range (self.length)] for h in range (self.height)]
+    
+    def __str__(self):
+        s = ""
+        for i, r in enumerate(self.__cells__):
+            for j, cel in enumerate(r):
+                s += f"{self.__cells__[j][i]} "
+            s += "\n"
+        return s
     
 class Individual():
 
@@ -148,7 +250,27 @@ class Individual():
         self.dead = True
         return self
     
+    def communicate(self, pop, world : World, selfish, altruistic, normal, verbose = False):
+        # This function is the function where the individual communicate information with the others 
+        # writing on the information layers of the world
+        # The process will in fact think at it 
+        actual_communication = 0
+        selfish_communication = selfish.communicate(self, pop, world)
+        altruistic_communication = altruistic.communicate(self, pop, world)
+        normal_communication = normal.communicate(self, pop, world)
+        # SAMPLE PROCESS
+        sample = random.uniform(0, 1)
+        if sample < self.selfishness_param:
+            actual_communication = selfish_communication
+        elif sample < self.altruism_param:
+            actual_communication = altruistic_communication
+        else:
+            actual_communication = normal_communication
+        world.write_communication(actual_communication)
+        
+        
     def action(self, pop, world : World, selfish, altruistic, normal, verbose = False):
+        # We will rework probably this a bit
         if self.dead == True: # This is not the right way to do but no matter now
             return 'Rest'
         # DECISION PROCESS
@@ -230,7 +352,6 @@ class Individual():
     def get_color(self):
         return (min(max(0, 255*self.selfishness_param), 255), min(max(0, 255*self.altruism_param), 255), min(max(0, 255*self.normality_param), 255))
 
-        
 class Population():
 
     def __init__(self, initial_population):
@@ -253,6 +374,9 @@ class Population():
     
     def update(self, world : World, verbose = False):
         for i in range (len(self.__individuals__)):
+            # WE RIDEFINE AS FOLLOW : the communication can be altruistic selfish etc etc the action is "always the same"
+            self.__individuals__[i].communicate(self, world, self.selfish_process, self.altruistic_process, self.normal_process, verbose)
+            world.process_information()
             self.__individuals__[i].action(self, world, self.selfish_process, self.altruistic_process, self.normal_process, verbose)
             # HERE WE MUST think at the conflicts, do not worry now 
             # MAYBE they are already thinked in the processes system but i don't think 
@@ -294,3 +418,13 @@ class Population():
     def alive(self):
         return len(self.__individuals__)
         
+if __name__ == "__main__":
+    w = World(10, 10)
+    w.populate()
+    communication = (1, 1, 3, 3, [[Vector(2, 2), Vector(2, 2)], [Vector(1, 1), Vector(1, 1)]])
+    w.write_communication(communication)
+    for r in w.information_layer:
+        for i in r:
+            i.process()
+            print(f"{i.read()} ",end="")
+        print()

@@ -10,6 +10,8 @@ import sys
 from elements import *
 import tkinter as tk
 from tkinter import messagebox
+import math
+from vector import *
 
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
@@ -45,6 +47,15 @@ def draw_population(screen, pop : Population):
         x, y = individual.position
         color = individual.get_color()
         pygame.draw.circle(screen, color, (x*side + side/2, y*side + side/2), side/2)
+
+# This is to see the actual vision of the agents in action
+def draw_neighbourhood(screen, pop : Population, world : World):
+    side = world.cell_side
+    for individual in pop:
+        neigh = world.get_neighbourhood_clip(individual.position, 4)
+        for i in range (neigh[0], neigh[2]+1):
+            for j in range (neigh[1], neigh[3]+1):
+                pygame.draw.rect(screen, pygame.Color(60, 179, 113, 20), pygame.Rect(i*side, j*side, side, side))
 
 # Draw the statistics bar
 def draw_stats(screen, pop : Population, world : World, camera_x, camera_y, zoom_level):
@@ -160,6 +171,11 @@ def play(pop : Population, world : World, verbose = False):
             pygame.quit()
             sys.exit()
 
+        print(world)
+        print()
+        world.print_information()
+        print()
+
         errn = world.update()
         if errn == -1:
             message_dialog("World Dead")
@@ -167,6 +183,7 @@ def play(pop : Population, world : World, verbose = False):
             pygame.quit()
             sys.exit()
 
+        
         # This is needed to scale the world surface based on the zoom
         scaled_world = pygame.transform.smoothscale(
             w_surface, 
