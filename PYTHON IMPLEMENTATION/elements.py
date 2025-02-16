@@ -101,7 +101,7 @@ class World():
         self.cell_side = CELL_SIDE
         self.active = 0
         self.costs = costs
-        self.information_layer = [[Information() for l in range (length)] for h in range (height)]
+        self.__information_layer__ = [[Information() for l in range (length)] for h in range (height)]
         self.populate()
     
     def populate(self):
@@ -162,38 +162,44 @@ class World():
         return min_y, min_x, max_y, max_x
     
     def get_neighbourhood(self, center, radius):
-        # This function "clip" the neighbourhood to the world border
+        # This function return the clipped neighbourhood
         min_y, min_x, max_y, max_x = self.get_neighbourhood_clip(center, radius)
-        return [[c for c in r[min_x:max_x]] for r in self.__cells__[min_y : max_y]]    
+        return [[c for c in r[min_x:max_x]] for r in self.__cells__[min_y : max_y]] 
+
+    def get_neighbourhood_information(self, center, radius):
+        # This function return the clipped neighbourhood information
+        min_y, min_x, max_y, max_x = self.get_neighbourhood_clip(center, radius)
+        return [[i for i in r[min_x:max_x]] for r in self.__information_layer__[min_y : max_y]]    
     
     # This methods work on the information layer
     def get_information(self):
-        return self.information_layer
+        return self.__information_layer__
     
     def write_communication(self, communication):
         # The communication is a block of vectors (or None) passed by some decisional processes
         # They must be added in the right position of the information layer
         min_y, min_x, max_y, max_x, block = communication
-        if block == []:
+        if len(block) == 1: # That's the case where there is only ad individual so the block store only the individual position
+            self.__information_layer__[block[0][0]][block[0][1]].write(float("inf"))
             return
         for i in range (min_y, max_y): # We will check on this values (maybe add a +1 is needed)
             for j in range (min_x, max_x):
-                self.information_layer[i][j].write(block[i-min_y][j-min_x])
+                self.__information_layer__[i][j].write(block[i-min_y][j-min_x])
 
     def process_information(self):
         # This is the processing work 
-        for r in self.information_layer:
+        for r in self.__information_layer__:
             for i in r:
                 i.process()
 
     def print_information(self):
-        for i, r in enumerate(self.information_layer):
+        for i, r in enumerate(self.__information_layer__):
             for j, inf in enumerate(r):
-                print(f"{self.information_layer[j][i]} ", end="")
+                print(f"{self.__information_layer__[j][i]} ", end="")
             print("")
     
     def reset_information(self):
-        self.information_layer = [[Information() for l in range (self.length)] for h in range (self.height)]
+        self.__information_layer__ = [[Information() for l in range (self.length)] for h in range (self.height)]
     
     def __str__(self):
         s = ""
@@ -205,7 +211,7 @@ class World():
     
 class Individual():
 
-    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0]):
+    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0], radius = 4):
         # Now we have to consider that individual will born only once with prefixed values, then it 
         # will depends on the parents state at the moment of the birth
         self.age = 0
@@ -220,6 +226,7 @@ class Individual():
         self.maturity = max_age//4 # For now we set as follow
         self.senility = max_age*3//4 # For now we set as follow
         self.dead = False
+        self.radius = radius # THIS IS IMPORTANT
 
     def update(self, costs):
         if self.energy <= 0 or self.age >= self.max_age:
@@ -423,7 +430,7 @@ if __name__ == "__main__":
     w.populate()
     communication = (1, 1, 3, 3, [[Vector(2, 2), Vector(2, 2)], [Vector(1, 1), Vector(1, 1)]])
     w.write_communication(communication)
-    for r in w.information_layer:
+    for r in w.get_information():
         for i in r:
             i.process()
             print(f"{i.read()} ",end="")

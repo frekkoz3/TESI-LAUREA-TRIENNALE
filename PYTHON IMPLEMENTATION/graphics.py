@@ -170,7 +170,7 @@ def play(pop : Population, world : World, verbose = False):
             write_report()
             pygame.quit()
             sys.exit()
-
+        
         print(world)
         print()
         world.print_information()

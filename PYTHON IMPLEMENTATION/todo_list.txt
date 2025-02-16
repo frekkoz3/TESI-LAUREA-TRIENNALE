@@ -2,9 +2,11 @@
 idea of the communication level
 this is pretty huge in fact
 
+- HAVE TO UNDERSTAND HOW IS IT WORKING RN
+
 - IMPLEMENTING THE NEIGHBOURHOOD SYSTEM for the DECISION
 - IMPLEMENTING THE KNOWLEDGE DISTRIBUTION for the decision
-- remember to have two different decision protocol
+- remember to have two different decision protocol -> one for young one for old
 
 - IMPLEMENTING A REPORT SCHEDULE
 for every run we must give an easy report schedule into a file
@@ -18,3 +20,5 @@ we must decide statistic we want to store
 
 - PROBABLY PARALLELIZE EVERYTHING
 Not so happy but when you know you know
+
+- THERE'S TO SAY I COULD HAVE IMPLEMENTED ALL WITH VECTOR MOVEMENT, IT WOULD HAVE BEEN EASIER AT A CERTAINT POINT LOL
