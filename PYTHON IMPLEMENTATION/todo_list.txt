@@ -13,3 +13,5 @@
 - IMPLEMENTING A REPORT SCHEDULE
 for every run we must give an easy report schedule into a file
 we must decide statistic we want to store
+
+- BUG OCCURRED WITH SOME PLACEMENTS
