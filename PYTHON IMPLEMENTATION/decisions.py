@@ -55,9 +55,9 @@ class DecisionalProcess(ABC):
                     v = Vector(i - actual_pos[0], j - actual_pos[1])
                     v = v*(1/v.norm()) if v.norm() != 0 else v
                     distance = 1 if (v.x == 0 and v.y == 0) else (abs(i - actual_pos[0]) + abs(j -actual_pos[1]))
-                    communication[i][j] += v*(1/distance) # This is the vector pointing to the food multiplied by the inverse of the distance from the food
-                    if i == actual_pos[0] and j == actual_pos[1]:
-                        communication[i][j] = float("inf") # here we have an individual
+                    communication[i][j] += v*(1/pow(distance, 2)) # This is the vector pointing to the food multiplied by the inverse of the distance from the food
+                    #if i == actual_pos[0] and j == actual_pos[1]:
+                     #   communication[i][j] = float("inf") # NOT NEEDED SINCE WE USE THE POSITION LAYER
             self.code = 'NF' # This is to remember then what to do 
             return min_y, min_x, max_y, max_x, communication # We communicate to go away from us (No Food found)
 
@@ -67,17 +67,13 @@ class DecisionalProcess(ABC):
                     v = Vector(f[0] - i, f[1] - j)
                     v = v*(1/v.norm()) if v.norm() != 0 else v
                     distance = 1 if (v.x == 0 and v.y == 0) else (abs(f[0] - i) + abs(f[1] - j))
-                    communication[i][j] += v * (1/distance) # This is the vector pointing to the food multiplied by the inverse of the distance from the food
+                    communication[i][j] += v * (1/pow(distance, 2)) # This is the vector pointing to the food multiplied by the inverse of the distance from the food
 
         # We fix at the end some special position
         for f in foods:
             communication[f[0]][f[1]] = Vector(0, 0) # here there is some food
-        
-        try:
-            communication[actual_pos[0]][actual_pos[1]] = float("inf") # here we have an individual
-        except IndexError as e:
-            print(f"actual_pos : {actual_pos[0]} {actual_pos[1]}. max_y - min_y + 1 : {max_y - min_y + 1}. max_x - min_x + 1 : {max_x - min_x + 1}")
-            #raise Exception
+            # communication[actual_pos[0]][actual_pos[1]] = float("inf") # NOT NEEDED SINCE WE USE THE POSITION LAYER
+    
         self.code = 'F'
         return min_y, min_x, max_y, max_x, communication
 
@@ -100,6 +96,7 @@ class DecisionalProcess(ABC):
         min_y, min_x, max_y, max_x = world.get_neighbourhood_clip(pos, r)
         seen = world.get_neighbourhood(pos, r) 
         info = world.get_neighbourhood_information(pos, r)
+        others = world.get_neighbourhood_position(pos, r)
         actual_pos = [pos[0] - min_y, pos[1] - min_x]
         # Available action
         available_action = []
@@ -115,7 +112,7 @@ class DecisionalProcess(ABC):
             for j in range (0,max_x - min_x):
                 if isinstance(info[i][j].value, Vector): # This is done to check before if food information are actually found
                     information_count += 1
-                if str(info[i][j]) == "I" and not (i == actual_pos[0] and j == actual_pos[1]): # This means there is an individual in that location
+                if others[i][j] and not (i == actual_pos[0] and j == actual_pos[1]): # This means there is an individual in that location
                     # We set as danger all possible position reachable from others individual.
                     # No matter if we set as danger an impossible position, no matter how the individual
                     # Will never reach it
@@ -172,8 +169,20 @@ class DecisionalProcess(ABC):
                 # Case where he just have eaten
                 act = random_movement(actual_pos, available_action, danger_pos)
             elif len(food) == 0 and information_count == 0: # Case where no food information is found
-                act = random_movement(actual_pos, available_action, danger_pos)            
-            elif len(food) == 0 and information_count > 0: # Now this is the case where we wanna eat and have information about it 
+                act = random_movement(actual_pos, available_action, danger_pos)
+            elif isinstance(info[actual_pos[0]][actual_pos[1]].value, Vector):
+                direction_vector = info[actual_pos[0]][actual_pos[1]].value.closer_orientation()
+                if direction_vector[0] == 0 and direction_vector[1] == 0: # If we don't have a better one we go random
+                    act = random_movement(actual_pos, available_action, danger_pos)
+                else:
+                    better_direction = translate_direction(direction_vector) # We translate the direction into a movement
+                    if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
+                        act = f"Move_{better_direction}"
+                    # Check if we are going into a loop of length 2
+                    if check_2_loop_movement(individual.last_action, act):
+                        act = random_movement(actual_pos, available_action, danger_pos)
+            else:
+            #elif len(food) == 0 and information_count > 0: # Now this is the case where we wanna eat and have information about it 
                 # If we have information we compute the better direction where to go (Not sure it actually works as it need)
                 information_sum = vector_sum(info)
                 # We find the closer direction
@@ -187,6 +196,7 @@ class DecisionalProcess(ABC):
                     # Check if we are going into a loop of length 2
                     if check_2_loop_movement(individual.last_action, act):
                         act = random_movement(actual_pos, available_action, danger_pos)
+            """"
             else: # This is the case where we see food
                 food_distance = [abs(actual_pos[0] - f[0]) + abs(actual_pos[1] - f[1]) for f in food]
                 min_idx = min(enumerate(food_distance), key=lambda x: x[1])[0]
@@ -204,7 +214,7 @@ class DecisionalProcess(ABC):
                 for dir in food_directions:
                     if check_movement(actual_pos, f"Move_{dir}", danger_pos):
                         act = f"Move_{dir}"
-                        break
+                        break"""
         else: # Adult time
             energy = individual.energy
             max_energy = individual.max_energy
@@ -226,7 +236,9 @@ class DecisionalProcess(ABC):
 class SelfishProcess(DecisionalProcess):
 
     def communicate(self, individual, population, world):
-        # A selfish bro will communicate the opposite when is finding food. If it is alone he will communicate the normal
+        # A selfish bro will communicate the opposite when is finding food. If it is alone he will communicate the normal.
+        # Using only the field to communicate seems to lead to difficulty but we have an idea. We must modify only the
+        # Minimum amount of information field necessary. It means that he will modify only the field that he does not need
         min_y, min_x, max_y, max_x, communication = super().communicate(individual, population, world)
         if self.code == 'F':
             communication = [[v.rotate(random.uniform(180, 180)) if isinstance(v, Vector) else v for v in c ] for c in communication] # rotation of 90 degrees 

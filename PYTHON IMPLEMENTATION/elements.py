@@ -77,7 +77,7 @@ class Information():
             vectors_sum = Vector(0, 0)
             for v in self.vectors:
                 vectors_sum += v*v.norm()
-            self.value = vectors_sum*(1/norms_sum) if norms_sum != 0 else float("inf") # If there is a food the value will be of + infinity 
+            self.value = vectors_sum*(1/norms_sum) if norms_sum != 0 else float("inf") # If there is a food the value will be of + infinity and also if there is only ourself! 
 
     def read(self):
         return self.value
@@ -105,6 +105,7 @@ class World():
         self.costs = costs
         self.base_radius = base_radius
         self.__information_layer__ = [[Information() for l in range (length)] for h in range (height)]
+        self.__position_layer__ = [[False for l in range (length)] for h in range (height)]
         self.populate()
     
     def populate(self):
@@ -128,6 +129,7 @@ class World():
             return - 1 # This means all that the world is dead
         self.density = self.active/(self.length*self.height)
         self.reset_information()
+        self.reset_position()
         return 0
     
     def __getitem__(self, idx) -> Cell:
@@ -173,10 +175,18 @@ class World():
         # This function return the clipped neighbourhood information
         min_y, min_x, max_y, max_x = self.get_neighbourhood_clip(center, radius)
         return [[i for i in r[min_x:max_x]] for r in self.__information_layer__[min_y : max_y]]    
+
+    def get_neighbourhood_position(self, center, radius):
+        # This function work on the position layer
+        min_y, min_x, max_y, max_x = self.get_neighbourhood_clip(center, radius)
+        return [[i for i in r[min_x:max_x]] for r in self.__position_layer__[min_y : max_y]]   
     
     # This methods work on the information layer
     def get_information(self):
         return self.__information_layer__
+    
+    def get_position(self):
+        return self.__position_layer__
     
     def write_communication(self, communication):
         # The communication is a block of vectors (or None) passed by some decisional processes
@@ -197,9 +207,16 @@ class World():
             for j, inf in enumerate(r):
                 print(f"{self.__information_layer__[j][i]} ", end="")
             print("")
+
+    def write_position(self, position):
+        i, j = position[0], position[1]
+        self.__position_layer__[i][j] = True
     
     def reset_information(self):
         self.__information_layer__ = [[Information() for l in range (self.length)] for h in range (self.height)]
+    
+    def reset_position(self):
+        self.__position_layer__ = [[False for l in range (self.length)] for h in range (self.height)]
     
     def __str__(self):
         s = ""
@@ -274,6 +291,7 @@ class Individual():
         else:
             actual_communication = normal_communication
         world.write_communication(actual_communication)
+        world.write_position(self.position) # We try to separate the vectors from the position
         
         
     def action(self, pop, world : World, selfish, altruistic, normal, verbose = False):

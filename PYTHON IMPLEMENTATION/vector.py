@@ -26,7 +26,7 @@ class Vector():
         directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         random.shuffle(directions)
         if self.norm() == 0:
-            return Vector(0, 0) # Special case
+            return (0, 0) # Special case
         # Normalized vector
         vx, vy = self.x/self.norm(), self.y/self.norm()
         return max(directions, key=lambda d: vx * d[0] + vy * d[1])
