@@ -182,7 +182,7 @@ class DecisionalProcess(ABC):
                     act = random_movement(actual_pos, available_action, danger_pos)
                 else:
                     better_direction = translate_direction(direction_vector) # We translate the direction into a movement
-                    if check_movement(actual_pos, f"Move_{better_direction}", danger_pos): # If we can we take it if not amen
+                    if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
                         act = f"Move_{better_direction}"
                     # Check if we are going into a loop of length 2
                     if check_2_loop_movement(individual.last_action, act):
@@ -205,7 +205,6 @@ class DecisionalProcess(ABC):
                     if check_movement(actual_pos, f"Move_{dir}", danger_pos):
                         act = f"Move_{dir}"
                         break
-            return act
         else: # Adult time
             energy = individual.energy
             max_energy = individual.max_energy
@@ -219,11 +218,10 @@ class DecisionalProcess(ABC):
                 if energy < max_energy * energy_need: # In this case he's gonna search for the food. He's not scared of others
                     # WE NEED TO THINK ABOUT WHEN HE HAVE JUST REPRODUCED : he can't reproduce on the food and if he have just reproduced he can't go for food
                     # THEN WE HAVE TO THINK ABOUT THE CHILDREN : maybe we should add a relation between adult and son, that if our son is in our space we let him go for the food
-                    return random_movement(actual_pos, available_action, danger_pos)
+                    act = random_movement(actual_pos, available_action, danger_pos)
                 else: # This is the case where we are searching for peace
-                    return random_movement(actual_pos, available_action, danger_pos)
-            return act
-        return 
+                    act = random_movement(actual_pos, available_action, danger_pos)
+        return act 
 
 class SelfishProcess(DecisionalProcess):
 
