@@ -1,5 +1,9 @@
 - THINK IF IMPOSING THE CORRELATION SON - FATHER
 
+- SO RN WE SHIFT TO A ONLY INFORMATION FIELD VERSION. WE ADDED A LITTLE LAYER FOR THE PRESENCE OF INDIVIDUAL (so not to 
+override the information field to store that information) and wow, this is pretty wow. We really could work (on the long terms 
+on something even better where we don't really anything else then the information field to decide what to do. That would be great.)
+
 - AN ADULT EAT AS MUCH HE NEED TO OBTAIN THE ENERGY + A LITTLE AMOUNT (like + some function of the peace zone just to go out the food and be alone)
 
 - ALL THE INITIAL DISTRIBUTION MUST BE IMPLEMENTED IN THEIR CORRISPECTIVE CLASS NON IN THE INITIAL_CONDITION_HANDLER

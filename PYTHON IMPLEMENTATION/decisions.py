@@ -181,9 +181,9 @@ class DecisionalProcess(ABC):
                     # Check if we are going into a loop of length 2
                     if check_2_loop_movement(individual.last_action, act):
                         act = random_movement(actual_pos, available_action, danger_pos)
-            else:
+            else: # This is the case where we know only about our position (and maybe someone else position)
             #elif len(food) == 0 and information_count > 0: # Now this is the case where we wanna eat and have information about it 
-                # If we have information we compute the better direction where to go (Not sure it actually works as it need)
+                # If we have information we compute the better direction where to go
                 information_sum = vector_sum(info)
                 # We find the closer direction
                 direction_vector = information_sum.closer_orientation()
