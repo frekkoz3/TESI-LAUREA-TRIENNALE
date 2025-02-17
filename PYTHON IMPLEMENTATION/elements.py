@@ -86,28 +86,31 @@ class Information():
         if self.value == None:
             return "N"
         if self.value == -float("inf"):
-            return "O"
+            return "I"
+        if self.value == float("inf"):
+            return "F"
         return f"{self.value}"
     
 class World():
 
-    def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, density = 0.1, costs = COSTS):
+    def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, initially_alive = 1, costs = COSTS, base_radius = 4):
         # The density parameter tell the portion of cells that should be activate
         self.length = length
         self.height = height
         self.cell_energy = cell_energy
         self.__cells__ = [[Cell(parameters) for l in range (length)] for h in range (height)]
-        self.density = density
+        self.initially_alive = initially_alive
         self.cell_side = CELL_SIDE
         self.active = 0
         self.costs = costs
+        self.base_radius = base_radius
         self.__information_layer__ = [[Information() for l in range (length)] for h in range (height)]
         self.populate()
     
     def populate(self):
         # For now we just activate the right amount of cells into the totals. Then we will think about more
         size = self.length * self.height
-        to_activate_size = int(size * self.density) # We need an integer
+        to_activate_size = self.initially_alive 
         idxs = [i for i in range (size)]
         random.shuffle(idxs)
         to_activate_idxs = idxs[:to_activate_size]
@@ -179,9 +182,6 @@ class World():
         # The communication is a block of vectors (or None) passed by some decisional processes
         # They must be added in the right position of the information layer
         min_y, min_x, max_y, max_x, block = communication
-        if len(block) == 1: # That's the case where there is only ad individual so the block store only the individual position
-            self.__information_layer__[block[0][0]][block[0][1]].write(float("inf"))
-            return
         for i in range (min_y, max_y): # We will check on this values (maybe add a +1 is needed)
             for j in range (min_x, max_x):
                 self.__information_layer__[i][j].write(block[i-min_y][j-min_x])
@@ -189,8 +189,8 @@ class World():
     def process_information(self):
         # This is the processing work 
         for r in self.__information_layer__:
-            for i in r:
-                i.process()
+            for info in r:
+                info.process()
 
     def print_information(self):
         for i, r in enumerate(self.__information_layer__):
@@ -383,7 +383,8 @@ class Population():
         for i in range (len(self.__individuals__)):
             # WE RIDEFINE AS FOLLOW : the communication can be altruistic selfish etc etc the action is "always the same"
             self.__individuals__[i].communicate(self, world, self.selfish_process, self.altruistic_process, self.normal_process, verbose)
-            world.process_information()
+        world.process_information()
+        for i in range (len(self.__individuals__)):
             self.__individuals__[i].action(self, world, self.selfish_process, self.altruistic_process, self.normal_process, verbose)
             # HERE WE MUST think at the conflicts, do not worry now 
             # MAYBE they are already thinked in the processes system but i don't think 

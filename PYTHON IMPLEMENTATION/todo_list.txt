@@ -1,24 +1,15 @@
-- IMPLEMENTING THE DECISION PROCESSES
-idea of the communication level
-this is pretty huge in fact
-
-- HAVE TO UNDERSTAND HOW IS IT WORKING RN
-
-- IMPLEMENTING THE NEIGHBOURHOOD SYSTEM for the DECISION
-- IMPLEMENTING THE KNOWLEDGE DISTRIBUTION for the decision
-- remember to have two different decision protocol -> one for young one for old
-
-- IMPLEMENTING A REPORT SCHEDULE
-for every run we must give an easy report schedule into a file
-we must decide statistic we want to store
-
 - THINK IF IMPOSING THE CORRELATION SON - FATHER
+
+- AN ADULT EAT AS MUCH HE NEED TO OBTAIN THE ENERGY + A LITTLE AMOUNT (like + some function of the peace zone just to go out the food and be alone)
 
 - ALL THE INITIAL DISTRIBUTION MUST BE IMPLEMENTED IN THEIR CORRISPECTIVE CLASS NON IN THE INITIAL_CONDITION_HANDLER
 
 - THINK AT THE -off-graphic SIMULATION (what if we have milion of individual? we can't visualize everything)
 
-- PROBABLY PARALLELIZE EVERYTHING
-Not so happy but when you know you know
-
 - THERE'S TO SAY I COULD HAVE IMPLEMENTED ALL WITH VECTOR MOVEMENT, IT WOULD HAVE BEEN EASIER AT A CERTAINT POINT LOL
+
+- FOR SOME REASONS THE LEGITIMACY CHECKER IS NOT WORKING AS IT SHOULD
+
+- IMPLEMENTING A REPORT SCHEDULE
+for every run we must give an easy report schedule into a file
+we must decide statistic we want to store

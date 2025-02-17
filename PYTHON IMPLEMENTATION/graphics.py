@@ -31,15 +31,41 @@ def message_dialog(text):
             messagebox.showinfo("Message", text)
             root.destroy()
 
+def draw_arrow(screen, start, vector, cell_side, color=(0, 0, 255), arrow_size=3):
+    """ Draws an arrow from start position in the direction of vector """
+    end = (start[0] + vector[0] * (cell_side // 3), 
+           start[1] + vector[1] * (cell_side // 3))
+
+    pygame.draw.line(screen, color, start, end, 2)
+
+    # Calculate arrowhead
+    angle = math.atan2(vector[1], vector[0])
+    left_wing = (end[0] - arrow_size * math.cos(angle - math.pi / 6),
+                 end[1] - arrow_size * math.sin(angle - math.pi / 6))
+    right_wing = (end[0] - arrow_size * math.cos(angle + math.pi / 6),
+                  end[1] - arrow_size * math.sin(angle + math.pi / 6))
+
+    pygame.draw.polygon(screen, color, [end, left_wing, right_wing])
+
 # Draw the grid
-def draw_world(screen, grid_world : World):
+def draw_world(screen, grid_world : World, field_visualization = True):
     height = grid_world.height
     length = grid_world.length
     side = grid_world.cell_side
+    information = grid_world.get_information()
     for i in range (height):
         for j in range (length):
             pygame.draw.rect(screen, grid_world[(i, j)].get_color(), pygame.Rect(i*side, j*side, side, side))
-
+            if field_visualization:
+                # drawing the information field 
+                info = information[i][j].value
+                if isinstance(info, Vector):
+                    x, y = i * side, j * side
+                    norm = info.norm() if info.norm() > 0 else 1
+                    normalized_v = info * (1/norm) 
+                    start_pos = (x + side//2, y + side//2)
+                    draw_arrow(screen, start_pos, (normalized_v.x, normalized_v.y), side)
+    
 # Draw the agents
 def draw_population(screen, pop : Population):
     side = pop.cell_side
@@ -155,14 +181,7 @@ def play(pop : Population, world : World, verbose = False):
                 camera_x = max(0, min(camera_x, WIDTH - SCREEN_WIDTH/zoom_level))
                 camera_y = max(0, min(camera_y, HEIGHT - SCREEN_HEIGHT/zoom_level))
         
-        # Clear the screen
-        screen.fill((255, 255, 255, 255))
-
-        # Call the drawing functions
-        draw_world(w_surface, grid_world)
-        draw_population(w_surface, pop)
-
-        # Update population and world
+        # Update population
         errn = pop.update(world, verbose)
 
         if errn == -1:
@@ -170,12 +189,15 @@ def play(pop : Population, world : World, verbose = False):
             write_report()
             pygame.quit()
             sys.exit()
-        
-        print(world)
-        print()
-        world.print_information()
-        print()
 
+        # Clear the screen
+        screen.fill((255, 255, 255, 255))
+
+        # Call the drawing functions
+        draw_world(w_surface, grid_world)
+        draw_population(w_surface, pop)
+
+        # Update the world
         errn = world.update()
         if errn == -1:
             message_dialog("World Dead")

@@ -41,13 +41,19 @@ class Vector():
     
     def __str__(self):
         return f"({format(self.x, ".2f")}, {format(self.y, ".2f")})"
+    
+    def __eq__(self, v):
+        if not isinstance(v, Vector):
+            return False
+        return (self.x == v.x) and (self.y == v.y)
 
-def vector_sum(vectors):
+def vector_sum(matrix_of_information):
     s = Vector(0, 0)
-    for v in vectors:
-        if isinstance(v, Vector):
-            s += v
-    if s.norm() == 0:
+    for vectors_of_information in matrix_of_information:
+        for info in vectors_of_information:
+            if isinstance(info.value, Vector):
+                s += info.value
+    if s == Vector(0, 0):
         return s
     return s * (1/s.norm())
 
