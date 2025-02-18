@@ -257,7 +257,7 @@ class World():
     
 class Individual():
 
-    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0], radius = 8):
+    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0], radius = 4):
         # Now we have to consider that individual will born only once with prefixed values, then it 
         # will depends on the parents state at the moment of the birth
         self.age = 0
@@ -269,7 +269,7 @@ class Individual():
         self.normality_param = social_param[2]
         self.position = position
         self.last_action = 'Rest'
-        self.maturity = 0.5 # For now we set as follow
+        self.maturity = 0.18 # For now we set as follow
         self.senility = 0.7 # For now we set as follow
         self.dead = False
         self.radius = radius # THIS IS IMPORTANT
@@ -308,17 +308,15 @@ class Individual():
         # writing on the information layers of the world
         # The process will in fact think at it 
         actual_communication = 0
-        selfish_communication = selfish.communicate(self, pop, world)
-        altruistic_communication = altruistic.communicate(self, pop, world)
-        normal_communication = normal.communicate(self, pop, world)
         # SAMPLE PROCESS
         sample = random.uniform(0, 1)
         if sample < self.selfishness_param:
-            actual_communication = selfish_communication
+            actual_communication = selfish.communicate(self, pop, world)
         elif sample < self.altruism_param:
-            actual_communication = altruistic_communication
+            actual_communication = altruistic.communicate(self, pop, world)
         else:
-            actual_communication = normal_communication
+            actual_communication = normal.communicate(self, pop, world)
+
         world.write_communication(actual_communication)
         
         world.write_position(self.position) # We try to separate the vectors from the position
@@ -330,18 +328,15 @@ class Individual():
         if self.dead == True: # This is not the right way to do but no matter now
             return 'Rest'
         # DECISION PROCESS
-        selfish_decision = selfish.decision(self, pop, world)
-        altruistic_decision = altruistic.decision(self, pop, world)
-        normal_decision = normal.decision(self, pop, world)
         actual_decision = "Rest"
         # SAMPLE PROCESS
         sample = random.uniform(0, 1)
         if sample < self.selfishness_param:
-            actual_decision = selfish_decision
+            actual_decision = selfish.decision(self, pop, world)
         elif sample < self.altruism_param:
-            actual_decision = altruistic_decision
+            actual_decision = altruistic.decision(self, pop, world)
         else:
-            actual_decision = normal_decision
+            actual_decision = normal.decision(self, pop, world)
         # ACTION PROCESS
         split_decision = actual_decision.split("_")
         if split_decision[0] == 'Move':
@@ -386,6 +381,8 @@ class Individual():
         mutation_2 = random.uniform(-0.1, 0.1)
         mutation_3 = - (mutation_1 + mutation_2)
         son_social_param = [self.selfishness_param + mutation_1, self.altruism_param + mutation_2, self.normality_param + mutation_3] # THIS IS A MESS but work
+        # SON RADIUS
+        son_radius = self.radius
         # AGE MUTATION
         age_mutation = random.uniform(0.9, 1.1)
         son_max_age = int(age_mutation*self.max_age)
@@ -398,7 +395,7 @@ class Individual():
         # MAX ENERGY 
         energy_mutation = random.uniform(0.9, 1.1)
         son_max_energy = self.max_energy * energy_mutation
-        son = Individual( max_age=son_max_age, birth_energy=son_energy, max_energy=son_max_energy, position=son_position, social_param=son_social_param) # We should implement a lot of think here, don't worry for now
+        son = Individual(max_age=son_max_age, birth_energy=son_energy, max_energy=son_max_energy, position=son_position, social_param=son_social_param, radius=son_radius) # We should implement a lot of think here, don't worry for now
         self.energy = int(self.energy*0.75) # This parameter is to tweak
         pop.birth(son)
 
@@ -441,7 +438,7 @@ class Population():
         self.mean_energy = 0
         for ind in self.__individuals__:
             self.mean_energy += ind.energy
-        self.mean_energy/=len(self.__individuals__)
+        self.mean_energy = self.mean_energy/len(self.__individuals__) if len(self.__individuals__) > 0 else 0
 
     def update(self, world : World, verbose = False):
         world.reset_information()

@@ -193,7 +193,7 @@ def play(pop : Population, world : World, init_cond : str, verbose = False):
 
         if errn == -1:
             message_dialog("Population Dead")
-            write_report()
+            write_report(reporter)
             pygame.quit()
             sys.exit()
 
@@ -201,7 +201,7 @@ def play(pop : Population, world : World, init_cond : str, verbose = False):
         errn = world.update()
         if errn == -1:
             message_dialog("World Dead")
-            write_report()
+            write_report(reporter)
             pygame.quit()
             sys.exit()
 
