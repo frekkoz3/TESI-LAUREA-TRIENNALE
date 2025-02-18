@@ -10,7 +10,8 @@ import random
 
 class initial_condition_handler():
 
-    def __init__(self, init_conds):
+    def __init__(self, init_conds : dict):
+        self.init_conds = init_conds
         # World param
         self.height = init_conds["Height"]
         self.width = init_conds["Width"]
@@ -32,7 +33,7 @@ class initial_condition_handler():
         self.rest_cost = init_conds["Rest"]
         self.reproduce_cost = init_conds["Reproduce"]
 
-        self.base_radius = 4 # THIS IS AN IMPORTANT PARAMETERS
+        self.base_radius = 4 # THIS IS AN IMPORTANT PARAMETERS -> this is were we set the first one
 
         self.world = self.world_handler()
         self.population = self.individual_handler()        
@@ -79,8 +80,17 @@ class initial_condition_handler():
                     'Rest' : self.rest_cost, 
                     'Eat_1' : self.eat_cost, 
                     'Reproduce' : self.reproduce_cost, 
-                    'Pollute' : 0.2
                 }
     
     def begin(self):
-        return self.population, self.world
+        return self.population, self.world, str(self)
+    
+    def __str__(self):
+        s = ""
+        for k in list(self.init_conds.keys()):
+            s += f"{k} : {self.init_conds[k]}\n"
+        s += f"Radius : {self.base_radius}\n"
+        return s
+
+if __name__ == "__main__":
+    pass

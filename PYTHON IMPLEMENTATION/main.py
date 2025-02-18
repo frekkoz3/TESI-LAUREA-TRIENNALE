@@ -12,5 +12,5 @@ from initial_condition_handler import *
 
 if __name__ == "__main__":
     data = inital_condition_GUI()
-    pop, world = initial_condition_handler(data).begin()
-    play(pop, world)
+    pop, world, init_cond = initial_condition_handler(data).begin()
+    play(pop, world, init_cond)

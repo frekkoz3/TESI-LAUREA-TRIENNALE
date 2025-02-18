@@ -12,6 +12,7 @@ import tkinter as tk
 from tkinter import messagebox
 import math
 from vector import *
+from stats_reporter import *
 
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 600
@@ -19,10 +20,10 @@ BAR_HEIGHT = 100
 
 BACKGROUND_COLOR = (245,245,220)
 
-FPS = 1
+FPS = 10
 
-def write_report():
-    pass
+def write_report(reporter : StatsReporter):
+    reporter.report()
 
 # For the message dialog window 
 def message_dialog(text):
@@ -107,12 +108,13 @@ def draw_stats(screen, pop : Population, world : World, camera_x, camera_y, zoom
     screen.blit(fps_text, (10, SCREEN_HEIGHT - BAR_HEIGHT + 70))
 
 # Main game loop
-def play(pop : Population, world : World, verbose = False):
+def play(pop : Population, world : World, init_cond : str, verbose = False):
     # Initialize PyGame
     pygame.init()
 
     # Screen setup
     WIDTH, HEIGHT = world.length * world.cell_side , world.height * world.cell_side
+    reporter = StatsReporter(initial_condition=init_cond) # We use the default path of the class
 
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("SOCIAL SIMULATION")
@@ -140,7 +142,7 @@ def play(pop : Population, world : World, verbose = False):
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                write_report()
+                write_report(reporter)
                 pygame.quit()
                 sys.exit()
             # THIS IS DONE FOR THE CAMERA
@@ -180,7 +182,12 @@ def play(pop : Population, world : World, verbose = False):
                 # Clamp the camera position
                 camera_x = max(0, min(camera_x, WIDTH - SCREEN_WIDTH/zoom_level))
                 camera_y = max(0, min(camera_y, HEIGHT - SCREEN_HEIGHT/zoom_level))
-        
+
+        # Clear the screen
+        screen.fill((255, 255, 255, 255))
+
+        reporter.update(pop, world)
+
         # Update population
         errn = pop.update(world, verbose)
 
@@ -190,13 +197,6 @@ def play(pop : Population, world : World, verbose = False):
             pygame.quit()
             sys.exit()
 
-        # Clear the screen
-        screen.fill((255, 255, 255, 255))
-
-        # Call the drawing functions
-        draw_world(w_surface, grid_world)
-        draw_population(w_surface, pop)
-
         # Update the world
         errn = world.update()
         if errn == -1:
@@ -205,6 +205,9 @@ def play(pop : Population, world : World, verbose = False):
             pygame.quit()
             sys.exit()
 
+        # Call the drawing functions
+        draw_world(w_surface, grid_world)
+        draw_population(w_surface, pop)
         
         # This is needed to scale the world surface based on the zoom
         scaled_world = pygame.transform.smoothscale(

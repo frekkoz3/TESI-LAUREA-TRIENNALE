@@ -13,7 +13,7 @@ from vector import *
 
 debug = False
 
-POSSIBILITIES = ['Move_N', 'Move_W', 'Move_S', 'Move_E', 'Rest', 'Eat_1', 'Reproduce', 'Pollute']
+POSSIBILITIES = ['Move_N', 'Move_W', 'Move_S', 'Move_E', 'Rest', 'Eat_1', 'Reproduce']
 
 class DecisionalProcess(ABC):
 
@@ -90,7 +90,7 @@ class DecisionalProcess(ABC):
          THE ADULTS (are talking) AIM FOR THE REPRODUCTION 
          we could add that the old individual who can't reproduce and just want to be chill so have a different goal (sociality for example)
         """
-        maturity = 0.18 # MATURITY PARAM : WHEN DOES AN INDIVIDUAL BECOME MATURE ENOUGH TO BE AN ADULT?
+        maturity = individual.maturity # MATURITY PARAM : WHEN DOES AN INDIVIDUAL BECOME MATURE ENOUGH TO BE AN ADULT?
         pos = individual.position
         r = individual.radius
         min_y, min_x, max_y, max_x = world.get_neighbourhood_clip(pos, r)
@@ -109,7 +109,7 @@ class DecisionalProcess(ABC):
         danger_pos = []
         information_count = 0
         for i in range (0, max_y - min_y):
-            for j in range (0,max_x - min_x):
+            for j in range (0, max_x - min_x):
                 if isinstance(info[i][j].value, Vector): # This is done to check before if food information are actually found
                     information_count += 1
                 if others[i][j] and not (i == actual_pos[0] and j == actual_pos[1]): # This means there is an individual in that location
@@ -147,15 +147,6 @@ class DecisionalProcess(ABC):
                     return a
             return "Rest"
         
-        def check_2_loop_movement(last_movement, movement): # Tells us if we are in a 2 length loop
-            # This should be done with the vector lol
-            movements = ["Move_N", "Move_W", "Move_S", "Move_E"]
-            if not last_movement in movements or not movement in movements:
-                return True # if one of the two is not a movement we are not in a loop for sure (not a 2 length)
-            last_dir = last_movement.split("_")[1]
-            dir = movement.split("_")[1]
-            return (last_dir == 'N' and dir == 'S') or (last_dir == 'S' and dir == 'N') or (last_dir == 'E' and dir == 'W') or (last_dir == 'W' and dir == 'E')
-  
         act = random_movement(actual_pos, available_action, danger_pos) # default -> this is done to prevent stall
 
         if individual.age < individual.max_age * maturity:
@@ -164,11 +155,8 @@ class DecisionalProcess(ABC):
             if actual_pos in food and individual.last_action.split("_")[0] != "Eat": # He can't eat if he actually have just eat
                 to_eat = individual.max_energy - individual.energy
                 act = f"Eat_{to_eat}"
-                #individual.radius = int(world.base_radius * 1.5) # For a bit his radius will be greater
             elif actual_pos in food and individual.last_action.split("_")[0] == "Eat" : # He must move somewhere (gonna think if necessary)
                 # Case where he just have eaten
-                act = random_movement(actual_pos, available_action, danger_pos)
-            elif len(food) == 0 and information_count == 0: # Case where no food information is found
                 act = random_movement(actual_pos, available_action, danger_pos)
             elif isinstance(info[actual_pos[0]][actual_pos[1]].value, Vector):
                 direction_vector = info[actual_pos[0]][actual_pos[1]].value.closer_orientation()
@@ -178,12 +166,8 @@ class DecisionalProcess(ABC):
                     better_direction = translate_direction(direction_vector) # We translate the direction into a movement
                     if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
                         act = f"Move_{better_direction}"
-                    # Check if we are going into a loop of length 2
-                    if check_2_loop_movement(individual.last_action, act):
-                        act = random_movement(actual_pos, available_action, danger_pos)
             else: # This is the case where we know only about our position (and maybe someone else position)
-            #elif len(food) == 0 and information_count > 0: # Now this is the case where we wanna eat and have information about it 
-                # If we have information we compute the better direction where to go
+                # If we have spatial information we compute the better direction where to go
                 information_sum = vector_sum(info)
                 # We find the closer direction
                 direction_vector = information_sum.closer_orientation()
@@ -193,55 +177,97 @@ class DecisionalProcess(ABC):
                     better_direction = translate_direction(direction_vector) # We translate the direction into a movement
                     if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
                         act = f"Move_{better_direction}"
-                    # Check if we are going into a loop of length 2
-                    if check_2_loop_movement(individual.last_action, act):
-                        act = random_movement(actual_pos, available_action, danger_pos)
-            """"
-            else: # This is the case where we see food
-                food_distance = [abs(actual_pos[0] - f[0]) + abs(actual_pos[1] - f[1]) for f in food]
-                min_idx = min(enumerate(food_distance), key=lambda x: x[1])[0]
-                food_to_eat = food[min_idx]
-                x_dist = actual_pos[1] - food_to_eat[1]
-                y_dist = actual_pos[0] - food_to_eat[0]
-                x_direction = 'W' if x_dist > 0 else 'E'
-                y_direction = 'N' if y_dist > 0 else 'S'
-                if x_dist == 0: # No movement needed on the x axis
-                    x_direction = y_direction
-                if y_dist == 0: # No movement needed on the y axis
-                    y_direction = x_direction
-                food_directions = [y_direction, x_direction]
-                random.shuffle(food_directions) # This is done to not prioritize a verse (Vertical or Horizzontal)
-                for dir in food_directions:
-                    if check_movement(actual_pos, f"Move_{dir}", danger_pos):
-                        act = f"Move_{dir}"
-                        break"""
         else: # Adult time
             energy = individual.energy
             max_energy = individual.max_energy
             energy_need = 0.6 # THIS IS AN IMPORTANT PARAMETER TO TWEAK. It is the minimum quantity of energy requested (ratio) 
-            if len(danger_pos) == 0 and energy >= max_energy*energy_need:
-                if actual_pos in food:
-                    act = random_movement(actual_pos, available_action, danger_pos=[])
-                else:
+            extra_energy = 0.2 # THIS PARAMETERS TELLS US HOW MUCH EXTRA ENERGY WE TAKE for searching peace
+            if len(danger_pos) == 0 and energy >= max_energy*energy_need and not(actual_pos in food) and "Reproduce" in available_action:
                     act = "Reproduce"
             else:
+                direction_vector = info[actual_pos[0]][actual_pos[1]].value.closer_orientation() if isinstance(info[actual_pos[0]][actual_pos[1]].value, Vector) else info[actual_pos[0]][actual_pos[1]].value
                 if energy < max_energy * energy_need: # In this case he's gonna search for the food. He's not scared of others
                     # WE NEED TO THINK ABOUT WHEN HE HAVE JUST REPRODUCED : he can't reproduce on the food and if he have just reproduced he can't go for food
                     # THEN WE HAVE TO THINK ABOUT THE CHILDREN : maybe we should add a relation between adult and son, that if our son is in our space we let him go for the food
-                    act = random_movement(actual_pos, available_action, danger_pos)
+                    if individual.last_action == "Reproduce": # Case where he just have reproduced, so he goes away from food to let the kid have it
+                        if not isinstance(direction_vector, Vector):
+                            act = random_movement(actual_pos, available_action, danger_pos)
+                        else:
+                            direction_vector = direction_vector.rotate(180)
+                            better_direction = translate_direction(direction_vector)
+                            if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
+                                act = f"Move_{better_direction}"
+                    elif actual_pos in food: # Case where he can eat. He won't eat again cause it will move away
+                        to_eat = int(max_energy * (energy_need + extra_energy)) - energy 
+                        act = f"Eat_{to_eat}"
+                    elif isinstance(direction_vector, Vector): # Case where we actually have information under our ass.
+                        if direction_vector[0] == 0 and direction_vector[1] == 0: # If we don't have a better one we go random
+                            act = random_movement(actual_pos, available_action, danger_pos)
+                        else:
+                            better_direction = translate_direction(direction_vector)
+                            if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
+                                act = f"Move_{better_direction}"
+                    else:# This is the case where we know only about our position.
+                        # If we have spatial information we compute the better direction where to go
+                        information_sum = vector_sum(info)
+                        # We find the closer direction
+                        direction_vector = information_sum.closer_orientation()
+                        if direction_vector[0] == 0 and direction_vector[1] == 0: # If we don't have a better one we go random
+                            act = random_movement(actual_pos, available_action, danger_pos)
+                        else:
+                            better_direction = translate_direction(direction_vector) # We translate the direction into a movement
+                            if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
+                                act = f"Move_{better_direction}"
                 else: # This is the case where we are searching for peace
-                    act = random_movement(actual_pos, available_action, danger_pos)
+                    # We just go away from food
+                    if not isinstance(direction_vector, Vector): # I think that this is the case where he is alone so he shouldn't even reach it
+                        act = random_movement(actual_pos, available_action, danger_pos)
+                    else: # Take the right direction and go the opposite. Note that if he can't go he will move random
+                        direction_vector = direction_vector.rotate(180)
+                        better_direction = translate_direction(direction_vector)
+                        if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
+                            act = f"Move_{better_direction}"
+
+        # TO BREAK THE LOOP WE INSERT THIS LITTLE PROBABILITY OF RANDOM MOVEMENT (1%)
+        if act.split("_")[0] == "Move":
+            if random.uniform(0, 1) < 0.01:
+                act = random_movement(actual_pos, available_action, danger_pos)
+
         return act 
 
 class SelfishProcess(DecisionalProcess):
 
     def communicate(self, individual, population, world):
-        # A selfish bro will communicate the opposite when is finding food. If it is alone he will communicate the normal.
+        # A selfish individual will communicate the opposite when is finding food. If it is alone he will communicate the normal.
         # Using only the field to communicate seems to lead to difficulty but we have an idea. We must modify only the
         # Minimum amount of information field necessary. It means that he will modify only the field that he does not need
         min_y, min_x, max_y, max_x, communication = super().communicate(individual, population, world)
+
         if self.code == 'F':
-            communication = [[v.rotate(random.uniform(180, 180)) if isinstance(v, Vector) else v for v in c ] for c in communication] # rotation of 90 degrees 
+
+            communication = [[v.rotate(180) if isinstance(v, Vector) else v for v in c ] for c in communication] # rotation of 180 degrees 
+            
+            # Now we set to normal the one needed to go to the food
+            pos = individual.position
+            r = individual.radius
+            rotated = [[False for j in range (0, max_x - min_x + 1)] for i in range (0, max_y - min_y + 1)] # We ned this to track what we already rotate back to normal
+            actual_pos = [pos[0] - min_y, pos[1] - min_x]
+            seen = world.get_neighbourhood(pos, r) 
+            for i in range (0, max_y - min_y):
+                for j in range (0,max_x - min_x):
+                    if seen[i][j].energy > 0: # We find so the position of the food
+                        # We define the corners of the rectangle containing food and individual at the two opposite corners
+                        min_i = min(actual_pos[0], i)
+                        min_j = min(actual_pos[1], j)
+                        max_i = max(actual_pos[0], i)
+                        max_j = max(actual_pos[1], j)
+                        # We reset to normal the value (only once)
+                        for y in range(min_i, max_i + 1):
+                            for z in range(min_j, max_j + 1):
+                                if not rotated[y][z]:
+                                    communication[y][z] = communication[y][z].rotate(180) if isinstance(communication[y][z], Vector) else communication[y][z]
+                                    rotated[y][z] = True
+
         return min_y, min_x, max_y, max_x, communication
 
     def decision(self, individual, population, world):

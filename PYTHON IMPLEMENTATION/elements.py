@@ -15,7 +15,15 @@ from vector import *
 BLANK_COLOR = (210,240,240)
 CELL_PARAMS = {"energy" : 0, "minimum" : 0, "maximum" : 0, "regeneration" : 0}
 CELL_SIDE = 20
-COSTS = {'Move_N' : 1, 'Move_W' : 1, 'Move_S' : 1, 'Move_E' : 1, 'Rest' : 0.1, 'Eat_1' : 0.1, 'Reproduce' : 5, 'Pollute' : 0.2}
+COSTS = {
+                    'Move_N' : 1, 
+                    'Move_W' : 1, 
+                    'Move_S' : 1, 
+                    'Move_E' : 1, 
+                    'Rest' : 1, 
+                    'Eat_1' : 1, 
+                    'Reproduce' : 1, 
+                } # This is a default costs table just in case
 
 class Cell():
 
@@ -93,7 +101,7 @@ class Information():
     
 class World():
 
-    def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, initially_alive = 1, costs = COSTS, base_radius = 4):
+    def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, initially_alive = 1, costs = COSTS, base_radius = 8):
         # The density parameter tell the portion of cells that should be activate
         self.length = length
         self.height = height
@@ -106,6 +114,7 @@ class World():
         self.base_radius = base_radius
         self.__information_layer__ = [[Information() for l in range (length)] for h in range (height)]
         self.__position_layer__ = [[False for l in range (length)] for h in range (height)]
+        self.mean_energy = 0
         self.populate()
     
     def populate(self):
@@ -117,6 +126,15 @@ class World():
         to_activate_idxs = idxs[:to_activate_size]
         for idx in to_activate_idxs:
             self.__cells__[idx//self.length][idx%self.height].charge_energy(self.cell_energy)
+        
+    def compute_mean_energy(self):
+        # This is the mean of the energy of the active cells
+        self.mean_energy = 0
+        for i in range(self.length):
+            for j in range(self.height):
+                if self.__cells__[i][j].energy > 0:
+                    self.mean_energy += self.__cells__[i][j].energy
+        self.mean_energy = 0 if self.active == 0 else self.mean_energy/self.active
 
     def update(self):
         self.active = 0
@@ -125,10 +143,18 @@ class World():
                 self.__cells__[i][j].update()
                 if self.__cells__[i][j].energy > 0:
                     self.active += 1
+        # When one cell die, an other one come alive
+        dead = self.initially_alive - self.active
+        for i in range (dead):
+            idx = random.randrange(0, self.length*self.height) # this is a uniform repopulation
+            while self.__cells__[idx//self.length][idx%self.height].energy > 0:
+                idx =  random.randrange(0, self.length*self.height)
+            self.__cells__[idx//self.length][idx%self.height].charge_energy(self.cell_energy)
+
         if self.active == 0:
             return - 1 # This means all that the world is dead
         self.density = self.active/(self.length*self.height)
-        self.reset_information()
+        self.compute_mean_energy()
         self.reset_position()
         return 0
     
@@ -140,6 +166,9 @@ class World():
             print(f"Idx dimension must be exactly 2. Given : {len(idx)}.")
             raise WorldException
         return self.__cells__[idx[0]][idx[1]]
+    
+    def alive(self):
+        return self.active
     
     def asList(self):
         # Return the idxs of the cell active as a list of tuples
@@ -228,7 +257,7 @@ class World():
     
 class Individual():
 
-    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0], radius = 4):
+    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0], radius = 8):
         # Now we have to consider that individual will born only once with prefixed values, then it 
         # will depends on the parents state at the moment of the birth
         self.age = 0
@@ -240,8 +269,8 @@ class Individual():
         self.normality_param = social_param[2]
         self.position = position
         self.last_action = 'Rest'
-        self.maturity = max_age//4 # For now we set as follow
-        self.senility = max_age*3//4 # For now we set as follow
+        self.maturity = 0.5 # For now we set as follow
+        self.senility = 0.7 # For now we set as follow
         self.dead = False
         self.radius = radius # THIS IS IMPORTANT
 
@@ -291,7 +320,9 @@ class Individual():
         else:
             actual_communication = normal_communication
         world.write_communication(actual_communication)
+        
         world.write_position(self.position) # We try to separate the vectors from the position
+        
         
         
     def action(self, pop, world : World, selfish, altruistic, normal, verbose = False):
@@ -361,20 +392,25 @@ class Individual():
         # BIRTH POSITION
         directions = { 1 : [0, 1], 2 : [0, -1], 3 : [-1, 0], 4 : [1, 0] }
         r_dir = random.randint(1, 4)
-        son_position = [self.position[0] + directions[r_dir][0] , self.position[1] + directions[r_dir][1]]
+        son_position = [self.position[0] + directions[r_dir][0] , self.position[1] + directions[r_dir][1]] # weshould check if this is valid
         # BIRTH ENERGY
-        son_energy = self.energy//4
+        son_energy = int(self.energy*0.25)
         # MAX ENERGY 
         energy_mutation = random.uniform(0.9, 1.1)
         son_max_energy = self.max_energy * energy_mutation
         son = Individual( max_age=son_max_age, birth_energy=son_energy, max_energy=son_max_energy, position=son_position, social_param=son_social_param) # We should implement a lot of think here, don't worry for now
-        self.energy = 3*self.energy//4 # This parameter is to tweak
+        self.energy = int(self.energy*0.75) # This parameter is to tweak
         pop.birth(son)
 
     def pollute(self):
         pass
 
     def get_color(self):
+        if self.age < self.max_age * self.maturity:
+            return (255 - 255*(self.age/self.max_age), 0, 255 - 255*(self.age/self.max_age))
+        return (0, 255*(self.age/self.max_age), 255*(self.age/self.max_age))
+        if self.age < self.max_age * self.maturity:
+            return (min(max(0, 255*self.selfishness_param), 255), min(max(0, 255*self.altruism_param), 255), min(max(0, 255*self.normality_param), 255))
         return (min(max(0, 255*self.selfishness_param), 255), min(max(0, 255*self.altruism_param), 255), min(max(0, 255*self.normality_param), 255))
 
 class Population():
@@ -386,6 +422,9 @@ class Population():
         self.selfish_process = SelfishProcess()
         self.altruistic_process = AltruisticProcess()
         self.normal_process = NormalProcess()
+        self.dead = 0
+        self.born = 0
+        self.mean_energy = 0
 
     def __getitem__(self, idx):
         return self.__individuals__[idx]
@@ -397,13 +436,24 @@ class Population():
         # We will try if this actually work
         self.__individuals__.remove(individual)
     
+    def compute_mean_energy(self):
+        # This compute the average energy of the population
+        self.mean_energy = 0
+        for ind in self.__individuals__:
+            self.mean_energy += ind.energy
+        self.mean_energy/=len(self.__individuals__)
+
     def update(self, world : World, verbose = False):
+        world.reset_information()
+        self.born = 0
         for i in range (len(self.__individuals__)):
             # WE RIDEFINE AS FOLLOW : the communication can be altruistic selfish etc etc the action is "always the same"
             self.__individuals__[i].communicate(self, world, self.selfish_process, self.altruistic_process, self.normal_process, verbose)
         world.process_information()
         for i in range (len(self.__individuals__)):
             self.__individuals__[i].action(self, world, self.selfish_process, self.altruistic_process, self.normal_process, verbose)
+            if self.__individuals__[i].last_action == "Reproduce":
+                self.born += 1
             # HERE WE MUST think at the conflicts, do not worry now 
             # MAYBE they are already thinked in the processes system but i don't think 
 
@@ -414,6 +464,9 @@ class Population():
                 Dead.append(ind)
         for i in range (len(Dead)):
             self.death(Dead[i])
+
+        # compute the number of dead at each step
+        self.dead = len(Dead)
         
         # COLLISION: the weaker die
         Dead = []
@@ -436,6 +489,10 @@ class Population():
         for i in range (len(Dead)):
             self.death(Dead[i])
 
+        self.dead += len(Dead)
+
+        self.compute_mean_energy()
+
         if len(self.__individuals__) == 0:
             return -1 # This means the population is all dead
         
@@ -445,12 +502,4 @@ class Population():
         return len(self.__individuals__)
         
 if __name__ == "__main__":
-    w = World(10, 10)
-    w.populate()
-    communication = (1, 1, 3, 3, [[Vector(2, 2), Vector(2, 2)], [Vector(1, 1), Vector(1, 1)]])
-    w.write_communication(communication)
-    for r in w.get_information():
-        for i in r:
-            i.process()
-            print(f"{i.read()} ",end="")
-        print()
+    pass
