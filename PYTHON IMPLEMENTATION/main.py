@@ -9,8 +9,9 @@ from graphics import *
 from elements import *
 from initial_condition_gui import *
 from initial_condition_handler import *
+from off_graphics_simulation import *
 
 if __name__ == "__main__":
     data = inital_condition_GUI()
     pop, world, init_cond = initial_condition_handler(data).begin()
-    play(pop, world, init_cond)
+    play_off_graphics(pop, world, init_cond, verbose = False, report=True)

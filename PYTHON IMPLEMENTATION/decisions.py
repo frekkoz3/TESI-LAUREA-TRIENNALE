@@ -147,86 +147,66 @@ class DecisionalProcess(ABC):
                     return a
             return "Rest"
         
-        act = random_movement(actual_pos, available_action, danger_pos) # default -> this is done to prevent stall
+        def basic_logic(actual_pos, available_action, danger_pos, direction_vector, act, rotate = False):
+            if direction_vector == (0, 0):
+                act = random_movement(actual_pos, available_action, danger_pos)
+            else:
+                if rotate:
+                    direction_vector = direction_vector.rotate(180).closer_orientation() # does to prevent numerical error
+                better_direction = translate_direction(direction_vector)
+                if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
+                    act = f"Move_{better_direction}"
+            return act
+
+        act = random_movement(actual_pos, available_action, danger_pos) # default
+        # to see what happens if we assing rest action at the (0, 0)
+
+        direction_vector = info[actual_pos[0]][actual_pos[1]].value.closer_orientation()
 
         if individual.age < individual.max_age * maturity:
             # THE YOUNG INDIVIDUAL IS GREEDY FOR FOOD BUT IT IS CAREFUL of the other -> we need a layer where we put all of this
             # FIRST THING FIRST : if it is on food and can actually eat, he eat
-            if actual_pos in food and individual.last_action.split("_")[0] != "Eat": # He can't eat if he actually have just eat
+            if actual_pos in food and individual.last_action.split("_")[0] != "Eat": # Now he can eat
                 to_eat = individual.max_energy - individual.energy
                 act = f"Eat_{to_eat}"
-            elif actual_pos in food and individual.last_action.split("_")[0] == "Eat" : # He must move somewhere (gonna think if necessary)
-                # Case where he just have eaten
+            elif actual_pos in food and individual.last_action.split("_")[0] == "Eat": # He must move somewhere (gonna think if necessary)
+                # Case where he just have eaten or no information available
                 act = random_movement(actual_pos, available_action, danger_pos)
-            elif isinstance(info[actual_pos[0]][actual_pos[1]].value, Vector):
-                direction_vector = info[actual_pos[0]][actual_pos[1]].value.closer_orientation()
-                if direction_vector[0] == 0 and direction_vector[1] == 0: # If we don't have a better one we go random
-                    act = random_movement(actual_pos, available_action, danger_pos)
-                else:
-                    better_direction = translate_direction(direction_vector) # We translate the direction into a movement
-                    if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
-                        act = f"Move_{better_direction}"
+            elif len(food) > 0: # If there is food we follow the information field
+                act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
             else: # This is the case where we know only about our position (and maybe someone else position)
-                # If we have spatial information we compute the better direction where to go
+                # If we have only spatial information and no food information we compute the better direction where to go
                 information_sum = vector_sum(info)
-                # We find the closer direction
                 direction_vector = information_sum.closer_orientation()
-                if direction_vector[0] == 0 and direction_vector[1] == 0: # If we don't have a better one we go random
-                    act = random_movement(actual_pos, available_action, danger_pos)
-                else:
-                    better_direction = translate_direction(direction_vector) # We translate the direction into a movement
-                    if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
-                        act = f"Move_{better_direction}"
+                act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
+
         else: # Adult time
             energy = individual.energy
             max_energy = individual.max_energy
-            energy_need = 0.6 # THIS IS AN IMPORTANT PARAMETER TO TWEAK. It is the minimum quantity of energy requested (ratio) 
-            extra_energy = 0.2 # THIS PARAMETERS TELLS US HOW MUCH EXTRA ENERGY WE TAKE for searching peace
+            energy_need = individual.energy_needed # THIS IS AN IMPORTANT PARAMETER TO TWEAK. It is the minimum quantity of energy requested (ratio) 
+            extra_energy = individual.extra_energy # THIS PARAMETERS TELLS US HOW MUCH EXTRA ENERGY WE TAKE for searching peace
             if len(danger_pos) == 0 and energy >= max_energy*energy_need and not(actual_pos in food) and "Reproduce" in available_action:
                     act = "Reproduce"
             else:
-                direction_vector = info[actual_pos[0]][actual_pos[1]].value.closer_orientation() if isinstance(info[actual_pos[0]][actual_pos[1]].value, Vector) else info[actual_pos[0]][actual_pos[1]].value
                 if energy < max_energy * energy_need: # In this case he's gonna search for the food. He's not scared of others
                     # WE NEED TO THINK ABOUT WHEN HE HAVE JUST REPRODUCED : he can't reproduce on the food and if he have just reproduced he can't go for food
                     # THEN WE HAVE TO THINK ABOUT THE CHILDREN : maybe we should add a relation between adult and son, that if our son is in our space we let him go for the food
                     if individual.last_action == "Reproduce": # Case where he just have reproduced, so he goes away from food to let the kid have it
-                        if not isinstance(direction_vector, Vector):
-                            act = random_movement(actual_pos, available_action, danger_pos)
-                        else:
-                            direction_vector = direction_vector.rotate(180)
-                            better_direction = translate_direction(direction_vector)
-                            if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
-                                act = f"Move_{better_direction}"
+                        act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act, rotate=True)
                     elif actual_pos in food: # Case where he can eat. He won't eat again cause it will move away
                         to_eat = int(max_energy * (energy_need + extra_energy)) - energy 
                         act = f"Eat_{to_eat}"
-                    elif isinstance(direction_vector, Vector): # Case where we actually have information under our ass.
-                        if direction_vector[0] == 0 and direction_vector[1] == 0: # If we don't have a better one we go random
-                            act = random_movement(actual_pos, available_action, danger_pos)
-                        else:
-                            better_direction = translate_direction(direction_vector)
-                            if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
-                                act = f"Move_{better_direction}"
+                    elif len(food) > 0:
+                        act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
                     else:# This is the case where we know only about our position.
                         # If we have spatial information we compute the better direction where to go
                         information_sum = vector_sum(info)
-                        # We find the closer direction
                         direction_vector = information_sum.closer_orientation()
-                        if direction_vector[0] == 0 and direction_vector[1] == 0: # If we don't have a better one we go random
-                            act = random_movement(actual_pos, available_action, danger_pos)
-                        else:
-                            better_direction = translate_direction(direction_vector) # We translate the direction into a movement
-                            if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
-                                act = f"Move_{better_direction}"
+                        act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
+
                 else: # This is the case where we are searching for peace
                     # We just go away from food
-                    if not isinstance(direction_vector, Vector): # I think that this is the case where he is alone so he shouldn't even reach it
-                        act = random_movement(actual_pos, available_action, danger_pos)
-                    else: # Take the right direction and go the opposite. Note that if he can't go he will move random
-                        direction_vector = direction_vector.rotate(180)
-                        better_direction = translate_direction(direction_vector)
-                        if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
-                            act = f"Move_{better_direction}"
+                    act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act, rotate=True)
 
         # TO BREAK THE LOOP WE INSERT THIS LITTLE PROBABILITY OF RANDOM MOVEMENT (1%)
         if act.split("_")[0] == "Move":

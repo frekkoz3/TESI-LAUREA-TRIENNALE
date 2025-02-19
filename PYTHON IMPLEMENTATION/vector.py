@@ -1,5 +1,13 @@
+"""
+    Author : Francesco Bredariol
+    Year : 2024/2025
+    This Project is done for the academic purpose of 
+    implementing the practical part of the Degree Thesis 
+    in Artificial Intelligence and Data Analytics.
+"""
 import math
 import random
+
 class Vector():
 
     def __init__(self, x, y):
@@ -26,10 +34,11 @@ class Vector():
         directions = [(1, 0), (0, 1), (-1, 0), (0, -1)]
         random.shuffle(directions)
         if self.norm() == 0:
-            return (0, 0) # Special case
+            return Vector(0, 0) # Special case
         # Normalized vector
         vx, vy = self.x/self.norm(), self.y/self.norm()
-        return max(directions, key=lambda d: vx * d[0] + vy * d[1])
+        v = max(directions, key=lambda d: vx * d[0] + vy * d[1])
+        return Vector(v[0], v[1])
 
     def __mul__(self, c): # This is the vector by costant multiplication
         return Vector(self.x*c, self.y*c)
@@ -43,9 +52,14 @@ class Vector():
         return f"({format(self.x, ".2f")}, {format(self.y, ".2f")})"
     
     def __eq__(self, v):
-        if not isinstance(v, Vector):
-            return False
-        return (self.x == v.x) and (self.y == v.y)
+        if isinstance(v, tuple):
+            return (self.x == v[0]) and (self.y == v[1])
+        if isinstance(v, Vector):
+            return (self.x == v.x) and (self.y == v.y)
+        return False
+    
+    def to_tuple(self):
+        return (self.x, self.y)
 
 def vector_sum(matrix_of_information):
     s = Vector(0, 0)
@@ -53,14 +67,13 @@ def vector_sum(matrix_of_information):
         for info in vectors_of_information:
             if isinstance(info.value, Vector):
                 s += info.value
-    if s == Vector(0, 0):
+    if s == (0, 0):
         return s
     return s * (1/s.norm())
 
-def translate_direction(dir):
+def translate_direction(dir : Vector):
     translate = {(1, 0) : "S", (0, 1) : "E", (-1, 0) : "N", (0, -1) : "W"}
-    return translate[dir]
+    return translate[dir.to_tuple()]
 
 if __name__ == "__main__":
-    v = Vector(1.2828272, 3.28292892)
-    print(v)
+    pass

@@ -20,7 +20,7 @@ BAR_HEIGHT = 100
 
 BACKGROUND_COLOR = (245,245,220)
 
-FPS = 10
+FPS = 20
 
 def write_report(reporter : StatsReporter):
     reporter.report()
@@ -85,7 +85,7 @@ def draw_neighbourhood(screen, pop : Population, world : World):
                 pygame.draw.rect(screen, pygame.Color(60, 179, 113, 20), pygame.Rect(i*side, j*side, side, side))
 
 # Draw the statistics bar
-def draw_stats(screen, pop : Population, world : World, camera_x, camera_y, zoom_level):
+def draw_stats(screen, pop : Population, world : World, camera_x, camera_y, zoom_level, time):
 
     font = pygame.font.Font(None, 18)
 
@@ -96,25 +96,33 @@ def draw_stats(screen, pop : Population, world : World, camera_x, camera_y, zoom
     screen.blit(zoom_text, (SCREEN_WIDTH - 40, SCREEN_HEIGHT - BAR_HEIGHT - 30))
 
     pop_size = pop.alive()
+    cell_size = world.alive()
+    avg_energy = pop.mean_energy
 
     # For now we don't have real statistic, we are just trying to have the bar
     health_text = font.render(f"POPULATION SIZE {pop_size}", True, (200, 255, 255))
-    score_text = font.render(f"CELL SIZE", True, (200, 255, 255))
-    fps_text = font.render(f"AVG ENERGY", True,  (200, 255, 255))
+    score_text = font.render(f"CELL SIZE {cell_size}", True, (200, 255, 255))
+    fps_text = font.render(f"AVG ENERGY {avg_energy}", True,  (200, 255, 255))
+    
 
     # This is done to actually "print"
     screen.blit(health_text, (10, SCREEN_HEIGHT - BAR_HEIGHT + 10))
     screen.blit(score_text, (10, SCREEN_HEIGHT - BAR_HEIGHT + 40))
     screen.blit(fps_text, (10, SCREEN_HEIGHT - BAR_HEIGHT + 70))
 
+    font = pygame.font.Font(None, 12)
+    time_text = font.render(f"{time}", True,  (200, 255, 255))
+    screen.blit(time_text, (SCREEN_WIDTH - 50, SCREEN_HEIGHT - BAR_HEIGHT + 10))
+
 # Main game loop
-def play(pop : Population, world : World, init_cond : str, verbose = False):
+def play(pop : Population, world : World, init_cond : str, verbose = False, report = True, t_max = 10000):
     # Initialize PyGame
     pygame.init()
 
     # Screen setup
     WIDTH, HEIGHT = world.length * world.cell_side , world.height * world.cell_side
-    reporter = StatsReporter(initial_condition=init_cond) # We use the default path of the class
+    if report:
+        reporter = StatsReporter(initial_condition=init_cond) # We use the default path of the class
 
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("SOCIAL SIMULATION")
@@ -142,7 +150,8 @@ def play(pop : Population, world : World, init_cond : str, verbose = False):
         # Handle events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                write_report(reporter)
+                if report:
+                    write_report(reporter)
                 pygame.quit()
                 sys.exit()
             # THIS IS DONE FOR THE CAMERA
@@ -186,22 +195,25 @@ def play(pop : Population, world : World, init_cond : str, verbose = False):
         # Clear the screen
         screen.fill((255, 255, 255, 255))
 
-        reporter.update(pop, world)
+        if report:
+            reporter.update(pop, world)
 
         # Update population
-        errn = pop.update(world, verbose)
+        errn = pop.update(world)
 
         if errn == -1:
-            message_dialog("Population Dead")
-            write_report(reporter)
+            print("Population Dead")
+            if report:
+                write_report(reporter)
             pygame.quit()
             sys.exit()
 
         # Update the world
         errn = world.update()
         if errn == -1:
-            message_dialog("World Dead")
-            write_report(reporter)
+            print("World Dead")
+            if report:
+                write_report(reporter)
             pygame.quit()
             sys.exit()
 
@@ -222,13 +234,21 @@ def play(pop : Population, world : World, init_cond : str, verbose = False):
         screen.blit(stat_bar, (0, SCREEN_HEIGHT - BAR_HEIGHT))
 
         # Drawing the stats
-        draw_stats(screen, pop, grid_world, camera_x*zoom_level//CELL_SIDE, camera_y*zoom_level//CELL_SIDE, zoom_level)        
+        draw_stats(screen, pop, grid_world, camera_x*zoom_level//CELL_SIDE, camera_y*zoom_level//CELL_SIDE, zoom_level, t)        
 
         # Update the display
         pygame.display.flip()
 
         # Increment time and regulate frame rate
         t += 1
+
+        if t > t_max:
+
+            if report:
+                write_report(reporter)
+            pygame.quit()
+            sys.exit()
+
         clock.tick(FPS)
 
 # Entry point

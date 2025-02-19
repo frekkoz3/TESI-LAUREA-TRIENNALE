@@ -69,6 +69,19 @@ def time_serie_plot(x, y, label, title, filename, figsize =(10, 5), evidence_mea
     plt.savefig(filename)  # Save plot as an image
     plt.close()  # Close the figure to free memory
 
+def parameters_plot(x, s, a, n, filename, figsize =(10, 5)):
+
+    plt.figure(figsize=figsize)
+    plt.plot(x, s, label = "Selfishness", color = "red")
+    plt.plot(x, a, label = "Altruism", color = "green")
+    plt.plot(x, n, label = "Normality", color = "blue")
+    plt.xlabel('Time')
+    plt.ylabel("Social Parameters Mean")
+    plt.title("Mean Social Parameters over Time")
+    plt.legend()
+
+    plt.savefig(filename)  # Save plot as an image
+    plt.close()  # Close the figure to free memory
 
 class StatsReporter:
 
@@ -86,18 +99,24 @@ class StatsReporter:
         self.death = []
         self.mean_population_energy = []
         self.mean_world_energy = []
+        self.selfish_mean_param = []
+        self.altruism_mean_param = []
+        self.normal_mean_param = []
         self.initial_condition = str(initial_condition) # it will be done by the initial condition handler everything to make it rigth
         self.file_path = file_path + self.folder_name + "/stats report.pdf"
         self.img_path = file_path + self.folder_name +"/"
     
     def update(self,  population : Population, world : World):
-
         self.alive_population.append(population.alive())
         self.alive_cell.append(world.alive())
         self.birth.append(population.born) # Born at every time stamp
         self.death.append(population.dead) # Dead at every time stamp
         self.mean_population_energy.append(population.mean_energy)
         self.mean_world_energy.append(world.mean_energy)
+        social_mean_param = population.mean_parameters
+        self.selfish_mean_param.append(social_mean_param[0])
+        self.altruism_mean_param.append(social_mean_param[1])
+        self.normal_mean_param.append(social_mean_param[2])
         self.t += 1
     
     def report(self):
@@ -113,6 +132,10 @@ class StatsReporter:
         # POPULATION OVER TIME PLOT
         time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.alive_population), "Population", "Population over time", filename=self.img_path+"Population over time.png")
         pdf.add_plot(plot_filename=self.img_path+"Population over time.png")
+        pdf.add_text(f"Mean : {np.mean(np.array(self.alive_population))}", size = 8, spacing = 8)
+        pdf.add_text(f"Variance : {np.var(np.array(self.alive_population))}", size = 8, spacing = 8)
+        pdf.add_text(f"Min : {np.min(np.array(self.alive_population))}", size = 8, spacing = 8)
+        pdf.add_text(f"Max : {np.max(np.array(self.alive_population))}", size = 8, spacing = 8)
 
         # CELL OVER TIME PLOT
         time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.alive_cell), "Cell", "Cell over time", filename=self.img_path+"Cell over time.png")
@@ -121,18 +144,28 @@ class StatsReporter:
         # BIRTH OVER TIME PLOT
         time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.birth), "Birth", "Birth over time", filename=self.img_path+"Birth over time.png")
         pdf.add_plot(plot_filename=self.img_path+"Birth over time.png")
+        pdf.add_text(f"Mean : {np.mean(np.array(self.birth))}", size = 8, spacing = 8)
+        pdf.add_text(f"Variance : {np.var(np.array(self.birth))}", size = 8, spacing = 8)
 
         # DEATH OVER TIME PLOT
         time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.death), "Death", "Death over time", filename=self.img_path+"Death over time.png")
         pdf.add_plot(plot_filename=self.img_path+"Death over time.png")
+        pdf.add_text(f"Mean : {np.mean(np.array(self.death))}", size = 8, spacing = 8)
+        pdf.add_text(f"Variance : {np.var(np.array(self.death))}", size = 8, spacing = 8)
         
         # MEAN POPULATION ENERGY OVER TIME
         time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_population_energy), "Mean Population Energy", "Mean Population Energy over time", filename=self.img_path+"Mean Population Energy over time.png")
         pdf.add_plot(plot_filename=self.img_path+"Mean Population Energy over time.png")
+        pdf.add_text(f"Mean : {np.mean(np.array(self.mean_population_energy))}", size = 8, spacing = 8)
+        pdf.add_text(f"Variance : {np.var(np.array(self.mean_population_energy))}", size = 8, spacing = 8)
 
-        # MEAN POPULATION ENERGY OVER TIME
+        # MEAN WORLD ENERGY OVER TIME
         time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_world_energy), "Mean World Energy", "Mean World Energy over time", filename=self.img_path+"Mean World Energy over time.png")
         pdf.add_plot(plot_filename=self.img_path+"Mean World Energy over time.png")
+
+        # MEAN SOCIAL PARAMETERS OVER TIME
+        parameters_plot(np.linspace(0, self.t, self.t), np.array(self.selfish_mean_param), np.array(self.altruism_mean_param), np.array(self.normal_mean_param), filename=self.img_path+"Mean Social Parameters over time.png")
+        pdf.add_plot(plot_filename=self.img_path+"Mean Social Parameters over time.png")
 
         # META DATA
         pdf.add_text(text="Author : Francesco Bredariol", size = 7, spacing = 7)

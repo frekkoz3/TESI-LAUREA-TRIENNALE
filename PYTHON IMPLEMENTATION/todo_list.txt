@@ -1,11 +1,2 @@
 - ALL THE INITIAL DISTRIBUTION MUST BE IMPLEMENTED IN THEIR CORRISPECTIVE CLASS NON IN THE INITIAL_CONDITION_HANDLER
 
-- THINK AT THE -off-graphic SIMULATION (what if we have milion of individual? we can't visualize everything)
-
-- TO CHECK THE ADULTS BEHAVIOUR (seems strange)
-
-- IMPLEMENTING A REPORT SCHEDULE
-for every run we must give an easy report schedule into a file
-we must decide statistic we want to store
-
-- TO CHECK THE DIVSION WHILE DOING THE MEAN

@@ -118,7 +118,7 @@ def inital_condition_GUI():
                 entries[key].grid(row = i, column = 1 + col_offset, padx = 10, pady = 3)
     
     # COLUMNS PART
-
+    
     generate_column(col1, lab_col1, spinboxes, dropdown, 0)
     generate_column(col2, lab_col2, spinboxes, dropdown, 3)
 

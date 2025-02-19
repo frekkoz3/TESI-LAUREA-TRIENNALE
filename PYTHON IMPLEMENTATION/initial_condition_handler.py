@@ -33,13 +33,18 @@ class initial_condition_handler():
         self.rest_cost = init_conds["Rest"]
         self.reproduce_cost = init_conds["Reproduce"]
 
+        # THIS PARAMETERS FOR NOW CAN BE TEWAKED ONLY HERE FOR NOW
         self.base_radius = 4 # THIS IS AN IMPORTANT PARAMETERS -> this is were we set the first one
+        self.maturity = 0.18
+        self.energy_needed  = 0.6
+        self.extra_energy = 0.2
+        self.mutation_rate = 0.1
 
         self.world = self.world_handler()
         self.population = self.individual_handler()        
 
     def world_handler(self):
-        world = World(self.width, self.height, cell_energy=(self.c_max+self.c_min)/2, parameters = {"energy" : 0, "minimum" : self.c_min, "maximum" : self.c_max, "regeneration" : self.c_regen}, costs=self.cost_handler(), initially_alive=self.initially_alive, base_radius=self.base_radius)
+        world = World(self.width, self.height, cell_energy=(self.c_max+self.c_min)/2, parameters = {"energy" : 0, "minimum" : self.c_min, "maximum" : self.c_max, "regeneration" : self.c_regen}, costs=self.cost_handler(), initially_alive=self.initially_alive)
         # WELL THERE ARE SOME PARAMETERS WE SHOULD IMPLEMENT BEFORE 
         return world
 
@@ -68,7 +73,7 @@ class initial_condition_handler():
         social_params = [[p + random.uniform(-p, p) for p in Params[self.p_distr]] for _ in range (self.size)]
         normalizing_sum = [sum(sp) for sp in social_params]
         social_params = [[sp/n_s for sp in social_params[i]] for i, n_s in enumerate(normalizing_sum)]
-        population = Population([Individual(max_ages[i], birth_energies[i], max_energies[i], social_params[i], position[i], self.base_radius) for i in range (self.size)])
+        population = Population([Individual(max_ages[i], birth_energies[i], max_energies[i], social_params[i], position[i], radius = self.base_radius, maturity = self.maturity, energy_needed = self.energy_needed, extra_energy = self.extra_energy, mutation_rate = self.mutation_rate) for i in range (self.size)])
         return population
     
     def cost_handler(self):
@@ -90,6 +95,10 @@ class initial_condition_handler():
         for k in list(self.init_conds.keys()):
             s += f"{k} : {self.init_conds[k]}\n"
         s += f"Radius : {self.base_radius}\n"
+        s += f"Maturity : {self.maturity}\n"
+        s += f"Energy Needed : {self.energy_needed}\n"
+        s += f"Extra Energy : {self.extra_energy}\n"
+        s += f"Mutation Rate : {self.mutation_rate}\n"
         return s
 
 if __name__ == "__main__":
