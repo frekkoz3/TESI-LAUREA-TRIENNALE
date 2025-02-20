@@ -171,7 +171,7 @@ class World():
                     to_active -= 1
         if self.distribution == "4 Islands":
             to_active = self.initially_alive - self.active
-            i = 0
+            i = random.randrange(0, 4) # if not he prioritize the first quadrant
             while to_active > 0:
                 mean_1 = self.height * 0.25 if i%2 == 0 else self.height * 0.75
                 mean_2 = self.length * 0.25 if i%4 < 2 else self.length * 0.75

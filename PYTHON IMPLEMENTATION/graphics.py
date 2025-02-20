@@ -131,7 +131,7 @@ def play(pop : Population, world : World, init_cond : str, verbose = False, repo
     if report:
         reporter = StatsReporter(initial_condition=init_cond) # We use the default path of the class
 
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("SOCIAL SIMULATION")
 
     # This is the surface where we draw the world
