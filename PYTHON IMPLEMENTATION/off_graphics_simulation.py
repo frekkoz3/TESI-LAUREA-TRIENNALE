@@ -13,7 +13,6 @@ from stats_reporter import *
 def write_report(reporter : StatsReporter):
     reporter.report()
 
-# Main game loop
 def play_off_graphics(pop : Population, world : World, init_cond : str, verbose = False, report = True, t_max = 10000):
     if report:
         reporter = StatsReporter(initial_condition=init_cond) # We use the default path of the class

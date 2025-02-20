@@ -75,7 +75,7 @@ def inital_condition_GUI():
                 "C_Min" : ["Insert", "Minimun Cell Energy to live"], 
                 "C_Max" : ["Insert", "Maximum Cell Energy contained"], 
                 "C_Regen" : ["Insert", "Regeneration Energy Ratio"],
-                "C_Distr" : ["Menu", ["Uniform"]],
+                "C_Distr" : ["Menu", ["Uniform", "Uniform no regen", "4 Islands", "4 Islands no regen"]],
                 "Height" : ["Insert", "Height in pixel"], 
                 "Width" : ["Insert", "Width in pixel"]
             }

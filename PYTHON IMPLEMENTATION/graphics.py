@@ -5,6 +5,8 @@
     implementing the practical part of the Degree Thesis 
     in Artificial Intelligence and Data Analytics.
 """
+import os
+os.environ['PYGAME_HIDE_SUPPORT_PROMPT'] = "hide" # THIS SHOULD RESOLVE THE ANNOYING MESSAGE 
 import pygame
 import sys
 from elements import *
@@ -14,8 +16,8 @@ import math
 from vector import *
 from stats_reporter import *
 
-SCREEN_WIDTH = 400
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 800
 BAR_HEIGHT = 100
 
 BACKGROUND_COLOR = (245,245,220)
@@ -70,10 +72,15 @@ def draw_world(screen, grid_world : World, field_visualization = True):
 # Draw the agents
 def draw_population(screen, pop : Population):
     side = pop.cell_side
+    font = pygame.font.Font(None, side)  # Default font
     for individual in pop:
         x, y = individual.position
         color = individual.get_color()
-        pygame.draw.circle(screen, color, (x*side + side/2, y*side + side/2), side/2)
+        circle_pos = (x*side + side/2, y*side + side/2)
+        pygame.draw.circle(screen, color, circle_pos, side/2)
+        text_surface = font.render(str(individual.idx), True, (255, 255, 255)) 
+        text_rect = text_surface.get_rect(center=circle_pos)  # Center text on the circle
+        screen.blit(text_surface, text_rect)
 
 # This is to see the actual vision of the agents in action
 def draw_neighbourhood(screen, pop : Population, world : World):
@@ -124,7 +131,7 @@ def play(pop : Population, world : World, init_cond : str, verbose = False, repo
     if report:
         reporter = StatsReporter(initial_condition=init_cond) # We use the default path of the class
 
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
     pygame.display.set_caption("SOCIAL SIMULATION")
 
     # This is the surface where we draw the world

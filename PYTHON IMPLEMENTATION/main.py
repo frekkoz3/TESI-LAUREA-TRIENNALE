@@ -14,4 +14,9 @@ from off_graphics_simulation import *
 if __name__ == "__main__":
     data = inital_condition_GUI()
     pop, world, init_cond = initial_condition_handler(data).begin()
-    play_off_graphics(pop, world, init_cond, verbose = False, report=True)
+    visualize = True
+    report = True
+    if visualize:
+        play(pop, world, init_cond, report = report)
+    else:
+        play_off_graphics(pop, world, init_cond, verbose = False, report = report)

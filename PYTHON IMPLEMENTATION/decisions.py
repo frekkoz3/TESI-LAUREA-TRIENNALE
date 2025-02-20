@@ -167,7 +167,7 @@ class DecisionalProcess(ABC):
             # THE YOUNG INDIVIDUAL IS GREEDY FOR FOOD BUT IT IS CAREFUL of the other -> we need a layer where we put all of this
             # FIRST THING FIRST : if it is on food and can actually eat, he eat
             if actual_pos in food and individual.last_action.split("_")[0] != "Eat": # Now he can eat
-                to_eat = individual.max_energy - individual.energy
+                to_eat = (individual.max_energy - individual.energy) * individual.energy_requested # He asks for a portion of what he need to fullfill
                 act = f"Eat_{to_eat}"
             elif actual_pos in food and individual.last_action.split("_")[0] == "Eat": # He must move somewhere (gonna think if necessary)
                 # Case where he just have eaten or no information available
@@ -251,19 +251,53 @@ class SelfishProcess(DecisionalProcess):
         return min_y, min_x, max_y, max_x, communication
 
     def decision(self, individual, population, world):
-        return super().decision(individual, population, world)
+        dec = super().decision(individual, population, world)
+        pos = individual.position
+        r = individual.radius
+        # Compute how many there are
+        others = world.get_neighbourhood_position(pos, r)
+        others_count = 0
+        for r in others:
+            for o in r:
+                if o:
+                    others_count += 1
+
+        # A selfish individual will eat more of what he need when see others in the zone
+        if dec.split("_")[0] == "Eat" and others_count > 1:  
+            unit = float(dec.split("_")[1])
+            unit *= 1.5
+            dec = f"Eat_{unit}"
+
+        return dec
 
 class AltruisticProcess(DecisionalProcess):
     
     def communicate(self, individual, population, world):
-        # An altruistic bro will communicate the opposite when is not finding food. If it is finding food he will communicate the normal
+        # An altruistic bro will communicate his position when is not finding food. If it is finding food he will communicate the food position
         min_y, min_x, max_y, max_x, communication = super().communicate(individual, population, world)
         if self.code == 'NF':
             communication = [[v.rotate(random.uniform(180, 180)) if isinstance(v, Vector) else v for v in c ] for c in communication] # rotation of 90 degrees 
         return min_y, min_x, max_y, max_x, communication
 
     def decision(self, individual, population, world):
-        return super().decision(individual, population, world)
+        dec = super().decision(individual, population, world)
+        pos = individual.position
+        r = individual.radius
+        # Compute how many there are
+        others = world.get_neighbourhood_position(pos, r)
+        others_count = 0
+        for r in others:
+            for o in r:
+                if o:
+                    others_count += 1
+
+        # An altruistic individual will eat less of what he need when see others in the zone
+        if dec.split("_")[0] == "Eat" and others_count > 1:  
+            unit = float(dec.split("_")[1])
+            unit *= 0.75
+            dec = f"Eat_{unit}"
+
+        return dec
     
 class NormalProcess(DecisionalProcess):
 

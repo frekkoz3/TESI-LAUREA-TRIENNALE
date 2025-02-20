@@ -104,52 +104,89 @@ class World():
         self.length = length
         self.height = height
         self.cell_energy = cell_energy
-        self.__cells__ = [[Cell(parameters) for l in range (length)] for h in range (height)]
+        self.__cells__ = [[Cell(parameters) for l in range (self.length)] for h in range (self.height)]
         self.initially_alive = initially_alive
         self.cell_side = CELL_SIDE
         self.active = 0
         self.costs = costs
-        self.__information_layer__ = [[Information() for l in range (length)] for h in range (height)]
-        self.__position_layer__ = [[False for l in range (length)] for h in range (height)]
+        self.__information_layer__ = [[Information() for l in range (self.length)] for h in range (self.height)]
+        self.__position_layer__ = [[False for l in range (self.length)] for h in range (self.height)]
         self.mean_energy = 0
         self.distribution = distribution
         self.populate()
     
     def populate(self):
-        if self.distribution == "Uniform":
+        if self.distribution == "Uniform" or self.distribution == "Uniform no regen":
             # For now we just activate the right amount of cells into the totals. Then we will think about more
-            size = self.length * self.height
-            to_activate_size = self.initially_alive 
-            idxs = [i for i in range (size)]
-            random.shuffle(idxs)
-            to_activate_idxs = idxs[:to_activate_size]
-            for idx in to_activate_idxs:
-                self.__cells__[idx//self.length][idx%self.height].charge_energy(self.cell_energy)
+            to_active = self.initially_alive
+            while to_active > 0:
+                idx_1 = random.randrange(0, self.height)
+                idx_2 = random.randrange(0, self.length)
+                if self.__cells__[idx_1][idx_2].energy == 0:
+                    self.__cells__[idx_1][idx_2].charge_energy(self.cell_energy)
+                    to_active -= 1
+            
+        if self.distribution == "4 Islands" or self.distribution == "4 Islands no regen":
+            # This is a 4 gaussian distribution all centered in the corrispective quadrant of the world
+            to_active = self.initially_alive      
+            i = 0
+            while to_active > 0:
+                mean_1 = self.height * 0.25 if i%2 == 0 else self.height * 0.75
+                mean_2 = self.length * 0.25 if i%4 < 2 else self.length * 0.75
+                i = i + 1
+                var_1 = self.height * (3 / 16)
+                var_2 = self.length * (3 / 16) # This variance should be the one to obtain the 100% of values in to the quadrant limits
+                idx_1 = int(random.gauss(mean_1, math.sqrt(var_1)))
+                idx_2 = int(random.gauss(mean_2, math.sqrt(var_2)))
+                idx_1 = max(min(idx_1, self.height - 1), 0)
+                idx_2 = max(min(idx_2, self.length - 1), 0)
+                if self.__cells__[idx_1][idx_2].energy == 0:
+                    self.__cells__[idx_1][idx_2].charge_energy(self.cell_energy)
+                    to_active -= 1
         
     def compute_mean_energy(self):
         # This is the mean of the energy of the active cells
         self.mean_energy = 0
-        for i in range(self.length):
-            for j in range(self.height):
+        for i in range(self.height):
+            for j in range(self.length):
                 if self.__cells__[i][j].energy > 0:
                     self.mean_energy += self.__cells__[i][j].energy
         self.mean_energy = 0 if self.active == 0 else self.mean_energy/self.active
 
     def update(self):
         self.active = 0
-        for i in range(self.length):
-            for j in range(self.height):
+        for i in range(self.height):
+            for j in range(self.length):
                 self.__cells__[i][j].update()
                 if self.__cells__[i][j].energy > 0:
                     self.active += 1
         # When one cell die, an other one come alive
-        dead = self.initially_alive - self.active
         if self.distribution == "Uniform":
-            for i in range (dead):
-                idx = random.randrange(0, self.length*self.height) # this is a uniform repopulation
-                while self.__cells__[idx//self.length][idx%self.height].energy > 0:
-                    idx =  random.randrange(0, self.length*self.height)
-                self.__cells__[idx//self.length][idx%self.height].charge_energy(self.cell_energy)
+            to_active = self.initially_alive - self.active
+            while to_active > 0:
+                idx_1 = random.randrange(0, self.height)
+                idx_2 = random.randrange(0, self.length)
+                if self.__cells__[idx_1][idx_2].energy == 0:
+                    self.__cells__[idx_1][idx_2].charge_energy(self.cell_energy)
+                    to_active -= 1
+        if self.distribution == "4 Islands":
+            to_active = self.initially_alive - self.active
+            i = 0
+            while to_active > 0:
+                mean_1 = self.height * 0.25 if i%2 == 0 else self.height * 0.75
+                mean_2 = self.length * 0.25 if i%4 < 2 else self.length * 0.75
+                i = i + 1
+                var_1 = self.height * (3 / 16)
+                var_2 = self.length * (3 / 16) # This variance should be the one to obtain the 100% of values in to the quadrant limits
+                idx_1 = int(random.gauss(mean_1, math.sqrt(var_1)))
+                idx_2 = int(random.gauss(mean_2, math.sqrt(var_2)))
+                idx_1 = max(min(idx_1, self.height - 1), 0)
+                idx_2 = max(min(idx_2, self.length - 1), 0)
+                if self.__cells__[idx_1][idx_2].energy == 0:
+                    self.__cells__[idx_1][idx_2].charge_energy(self.cell_energy)
+                    to_active -= 1
+
+        # all the version no regen are the same as the original but whith no regen
 
         if self.active == 0:
             return - 1 # This means all that the world is dead
@@ -173,8 +210,8 @@ class World():
     def asList(self):
         # Return the idxs of the cell active as a list of tuples
         idxs = []
-        for i in range (self.length):
-            for j in range (self.height):
+        for i in range (self.height):
+            for j in range (self.length):
                 if self.__cells__[i][j].energy > 0:
                     idxs.append((i, j))
         return idxs
@@ -257,7 +294,7 @@ class World():
     
 class Individual():
 
-    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0], radius = 4, maturity = 0.18, energy_needed = 0.6, extra_energy = 0.2, mutation_rate = 0.1):
+    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0], radius = 4, maturity = 0.18, energy_needed = 0.6, extra_energy = 0.2, mutation_rate = 0.1, idx = 0, energy_requested = 0.5):
         # Now we have to consider that individual will born only once with prefixed values, then it 
         # will depends on the parents state at the moment of the birth
         self.age = 0
@@ -275,6 +312,8 @@ class Individual():
         self.energy_needed = energy_needed  # THIS IS AN IMPORTANT PARAMETER TO TWEAK. It is the minimum quantity of energy requested (ratio) in the adult time while eating
         self.extra_energy = extra_energy  # THIS IS AN IMPORTANT PARAMETER TO TWEAK. It is the extra quantity of energy requested (ratio) in the adult time while eating
         self.mutation_rate = mutation_rate 
+        self.energy_requested = energy_requested # THIS IS THE ENERGY A YOUNG INDIVIDUAL REQUEST EVERY TIME HE EAT
+        self.idx = idx
 
     def update(self, costs):
         if self.energy <= 0 or self.age >= self.max_age:
@@ -399,10 +438,14 @@ class Individual():
         son_position = [self.position[0] + directions[r_dir][0] , self.position[1] + directions[r_dir][1]] # weshould check if this is valid
         # BIRTH ENERGY
         son_energy = int(self.energy*0.25)
+        # SON IDX
+        son_idx = self.idx
+        # SON ENERGY REQUESTED
+        son_energy_requested = self.energy_requested * (1 + random.uniform(-self.mutation_rate, self.mutation_rate))
         # MAX ENERGY 
         energy_mutation = random.uniform(0.9, 1.1)
         son_max_energy = self.max_energy * energy_mutation
-        son = Individual(max_age=son_max_age, birth_energy=son_energy, max_energy=son_max_energy, position=son_position, social_param=son_social_param, radius=son_radius, maturity=son_maturity, energy_needed=son_energy_needed, extra_energy=son_extra_energy, mutation_rate=son_mutation_rate) # We should implement a lot of think here, don't worry for now
+        son = Individual(max_age=son_max_age, birth_energy=son_energy, max_energy=son_max_energy, position=son_position, social_param=son_social_param, radius=son_radius, maturity=son_maturity, energy_needed=son_energy_needed, extra_energy=son_extra_energy, mutation_rate=son_mutation_rate, idx = son_idx, energy_requested = son_energy_requested) # We should implement a lot of think here, don't worry for now
         self.energy = int(self.energy*0.75) # This parameter is to tweak
         pop.birth(son)
 
@@ -410,12 +453,21 @@ class Individual():
         pass
 
     def get_color(self):
+        # NORMAL BLUE, ALTRUISTIC GREEN, SELFISH RED 
+        # YOUNG LIGHT, ADULT DARK
+        young_color = (51, 255, 255) # The default is set for the normal
+        adult_color = (51, 51, 255) # The default is set for the normal
+        # SELFISH ONE
+        if self.selfishness_param > self.altruism_param and self.selfishness_param > self.normality_param:
+            young_color = (255, 51, 255)
+            adult_color = (255, 51, 51)
+        # ALTRUISTIC ONE 
+        if self.altruism_param > self.selfishness_param and self.altruism_param > self.normality_param:
+            young_color = (51, 255, 51)
+            adult_color = (0, 204, 0)
         if self.age < self.max_age * self.maturity:
-            return (255 - 255*(self.age/self.max_age), 0, 255 - 255*(self.age/self.max_age))
-        return (0, 255*(self.age/self.max_age), 255*(self.age/self.max_age))
-        if self.age < self.max_age * self.maturity:
-            return (min(max(0, 255*self.selfishness_param), 255), min(max(0, 255*self.altruism_param), 255), min(max(0, 255*self.normality_param), 255))
-        return (min(max(0, 255*self.selfishness_param), 255), min(max(0, 255*self.altruism_param), 255), min(max(0, 255*self.normality_param), 255))
+            return young_color
+        return adult_color
 
 class Population():
 
@@ -430,6 +482,7 @@ class Population():
         self.born = 0
         self.mean_energy = 0
         self.mean_parameters = [0, 0, 0]
+        self.heritage = [p.idx for p in initial_population]
 
     def __getitem__(self, idx):
         return self.__individuals__[idx]
@@ -505,6 +558,8 @@ class Population():
 
         self.compute_mean_energy()
         self.compute_mean_parameter()
+
+        self.heritage = [p.idx for p in self.__individuals__]
 
         if len(self.__individuals__) == 0:
             return -1 # This means the population is all dead
