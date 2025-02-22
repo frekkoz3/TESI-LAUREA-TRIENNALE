@@ -79,11 +79,11 @@ class Information():
         if self.vectors == []: #This is the case where no information is stored
             self.value = None 
         else: # This is the case where a position is free and there are more vectors stored.  We do a weigthed sum of the vectors
-            norms_sum = sum([v.norm() for v in self.vectors]) 
+            
             vectors_sum = Vector(0, 0)
             for v in self.vectors:
                 vectors_sum += v*v.norm()
-            self.value = vectors_sum*(1/norms_sum) if norms_sum != 0 else Vector(0, 0) # If there is a food the value will be of + infinity and also if there is only ourself! 
+            self.value = vectors_sum*(1/vectors_sum.norm()) if vectors_sum.norm() != 0 else Vector(0, 0) # If there is a food the value will be of + infinity and also if there is only ourself! 
 
     def read(self):
         return self.value

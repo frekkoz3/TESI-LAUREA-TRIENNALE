@@ -22,7 +22,7 @@ BAR_HEIGHT = 100
 
 BACKGROUND_COLOR = (245,245,220)
 
-FPS = 20
+FPS = 2
 
 def write_report(reporter : StatsReporter):
     reporter.report()
