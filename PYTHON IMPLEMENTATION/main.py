@@ -19,4 +19,4 @@ if __name__ == "__main__":
     if visualize:
         play(pop, world, init_cond, report = report)
     else:
-        play_off_graphics(pop, world, init_cond, verbose = False, report = report)
+        play_off_graphics(pop, world, init_cond, report = report)
