@@ -85,10 +85,15 @@ def parameters_plot(x, s, a, n, filename, figsize =(10, 5)):
 
 class StatsReporter:
 
-    def __init__(self, initial_condition, file_path = "REPORT/"):
+    def __init__(self, initial_condition, file_path = "REPORT/", folder_name_mode = 'Date_Time'):
         
         self.current_time = get_current_datetime()
-        self.folder_name = self.current_time
+        if folder_name_mode == 'Date_Time': # Date time name
+            self.folder_name = self.current_time
+        else: # folder_name_mode == 'Console': # Console input
+            self.folder_name = input("Insert the name for the folder where to save the report: ")
+
+
         # Create the folder (if it doesn't exist)
         os.makedirs(file_path + self.folder_name, exist_ok=True)
 
@@ -102,6 +107,7 @@ class StatsReporter:
         self.selfish_mean_param = []
         self.altruism_mean_param = []
         self.normal_mean_param = []
+        self.mean_population_age = []
         self.heritage = []
         self.different_heritage = []
         self.initial_condition = str(initial_condition) # it will be done by the initial condition handler everything to make it rigth
@@ -121,6 +127,7 @@ class StatsReporter:
         self.normal_mean_param.append(social_mean_param[2])
         self.heritage.append(population.heritage)
         self.different_heritage.append(len(set(population.heritage)))
+        self.mean_population_age.append(population.mean_age)
         self.t += 1
     
     def report(self):
@@ -166,6 +173,13 @@ class StatsReporter:
         pdf.add_plot(plot_filename=self.img_path+"Mean Population Energy over time.png")
         pdf.add_text(f"Mean : {np.mean(np.array(self.mean_population_energy))}", size = 8, spacing = 8)
         pdf.add_text(f"Variance : {np.var(np.array(self.mean_population_energy))}", size = 8, spacing = 8)
+
+        # MEAN POPULATION AGE OVER TIME
+        time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_population_age), "Mean Population Age", "Mean Population Age over time", filename=self.img_path+"Mean Population Age over time.png")
+        pdf.add_plot(plot_filename=self.img_path+"Mean Population Age over time.png")
+        pdf.add_text(f"Mean : {np.mean(np.array(self.mean_population_age))}", size = 8, spacing = 8)
+        pdf.add_text(f"Variance : {np.var(np.array(self.mean_population_age))}", size = 8, spacing = 8)
+
 
         # MEAN WORLD ENERGY OVER TIME
         time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_world_energy), "Mean World Energy", "Mean World Energy over time", filename=self.img_path+"Mean World Energy over time.png")

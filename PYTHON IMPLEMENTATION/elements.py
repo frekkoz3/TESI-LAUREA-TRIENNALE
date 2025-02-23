@@ -482,6 +482,7 @@ class Population():
         self.born = 0
         self.mean_energy = 0
         self.mean_parameters = [0, 0, 0]
+        self.mean_age = 0
         self.heritage = [p.idx for p in initial_population]
 
     def __getitem__(self, idx):
@@ -500,6 +501,12 @@ class Population():
         for ind in self.__individuals__:
             self.mean_energy += ind.energy
         self.mean_energy = 0 if len(self.__individuals__) == 0 else self.mean_energy/len(self.__individuals__)
+
+    def compute_mean_age(self):
+        self.mean_age = 0
+        for ind in self.__individuals__:
+            self.mean_age += ind.age
+        self.mean_age = 0 if len(self.__individuals__) == 0 else self.mean_age/len(self.__individuals__)
 
     def compute_mean_parameter(self):
         self.mean_parameters = [0, 0, 0]
@@ -558,6 +565,7 @@ class Population():
 
         self.compute_mean_energy()
         self.compute_mean_parameter()
+        self.compute_mean_age()
 
         self.heritage = [p.idx for p in self.__individuals__]
 
