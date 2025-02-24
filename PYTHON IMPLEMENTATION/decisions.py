@@ -56,8 +56,6 @@ class DecisionalProcess(ABC):
                     v = v*(1/v.norm()) if v.norm() != 0 else v
                     distance = 1 if (v.x == 0 and v.y == 0) else (abs(i - actual_pos[0]) + abs(j -actual_pos[1]))
                     communication[i][j] += v*(1/pow(distance, 2)) # This is the vector pointing to the food multiplied by the inverse of the distance from the food
-                    #if i == actual_pos[0] and j == actual_pos[1]:
-                     #   communication[i][j] = float("inf") # NOT NEEDED SINCE WE USE THE POSITION LAYER
             self.code = 'NF' # This is to remember then what to do 
             return min_y, min_x, max_y, max_x, communication # We communicate to go away from us (No Food found)
 
@@ -194,7 +192,7 @@ class DecisionalProcess(ABC):
                     if individual.last_action == "Reproduce": # Case where he just have reproduced, so he goes away from food to let the kid have it
                         act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act, rotate=True)
                     elif actual_pos in food: # Case where he can eat. He won't eat again cause it will move away
-                        to_eat = int(max_energy * (energy_need + extra_energy)) - energy 
+                        to_eat = max_energy * (energy_need + extra_energy) - energy 
                         act = f"Eat_{to_eat}"
                     elif len(food) > 0:
                         act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)

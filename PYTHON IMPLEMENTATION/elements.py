@@ -79,11 +79,11 @@ class Information():
         if self.vectors == []: #This is the case where no information is stored
             self.value = None 
         else: # This is the case where a position is free and there are more vectors stored.  We do a weigthed sum of the vectors
-            norms_sum = sum([v.norm() for v in self.vectors]) 
+            
             vectors_sum = Vector(0, 0)
             for v in self.vectors:
                 vectors_sum += v*v.norm()
-            self.value = vectors_sum*(1/norms_sum) if norms_sum != 0 else Vector(0, 0) # If there is a food the value will be of + infinity and also if there is only ourself! 
+            self.value = vectors_sum*(1/vectors_sum.norm()) if vectors_sum.norm() != 0 else Vector(0, 0) # If there is a food the value will be of + infinity and also if there is only ourself! 
 
     def read(self):
         return self.value
@@ -482,6 +482,7 @@ class Population():
         self.born = 0
         self.mean_energy = 0
         self.mean_parameters = [0, 0, 0]
+        self.mean_age = 0
         self.heritage = [p.idx for p in initial_population]
 
     def __getitem__(self, idx):
@@ -500,6 +501,12 @@ class Population():
         for ind in self.__individuals__:
             self.mean_energy += ind.energy
         self.mean_energy = 0 if len(self.__individuals__) == 0 else self.mean_energy/len(self.__individuals__)
+
+    def compute_mean_age(self):
+        self.mean_age = 0
+        for ind in self.__individuals__:
+            self.mean_age += ind.age
+        self.mean_age = 0 if len(self.__individuals__) == 0 else self.mean_age/len(self.__individuals__)
 
     def compute_mean_parameter(self):
         self.mean_parameters = [0, 0, 0]
@@ -558,6 +565,7 @@ class Population():
 
         self.compute_mean_energy()
         self.compute_mean_parameter()
+        self.compute_mean_age()
 
         self.heritage = [p.idx for p in self.__individuals__]
 
