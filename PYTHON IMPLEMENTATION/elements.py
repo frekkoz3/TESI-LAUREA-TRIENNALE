@@ -127,6 +127,7 @@ class World():
                     to_active -= 1
             
         if self.distribution == "4 Islands" or self.distribution == "4 Islands no regen":
+            
             # This is a 4 gaussian distribution all centered in the corrispective quadrant of the world
             to_active = self.initially_alive      
             i = 0
