@@ -34,14 +34,9 @@ class initial_condition_handler():
         self.reproduce_cost = init_conds["Reproduce"]
 
         # THIS PARAMETERS FOR NOW CAN BE TEWAKED ONLY HERE FOR NOW
-<<<<<<< HEAD
         self.base_radius = 8 # THIS IS AN IMPORTANT PARAMETERS -> this is were we set the first one
         self.maturity = 0.18
-=======
-        self.base_radius = 4 # THIS IS AN IMPORTANT PARAMETERS -> this is were we set the first one
 
-        self.maturity = 0.25
->>>>>>> 4b40fb0c2cecad827d02ad8d3071c036a22756ff
         self.energy_needed  = 0.6
         self.extra_energy = 0.2
         self.mutation_rate = 0.1
