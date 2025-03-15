@@ -15,7 +15,7 @@ if __name__ == "__main__":
     data = inital_condition_GUI()
     pop, world, init_cond = initial_condition_handler(data).begin()
     visualize = True
-    report = True
+    report = False
     if visualize:
         play(pop, world, init_cond, report = report)
     else:
