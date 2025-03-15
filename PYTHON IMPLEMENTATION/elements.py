@@ -425,9 +425,7 @@ class Individual():
         son_radius = self.radius
         # SON MATURITY
         son_maturity = self.maturity
-        # SON ENERGY PARAMETERS
-        son_energy_needed = self.energy_needed
-        son_extra_energy = self.extra_energy
+        
         # SON MUTATION PARAM
         son_mutation_rate = self.mutation_rate
         # AGE MUTATION
@@ -441,7 +439,9 @@ class Individual():
         son_energy = int(self.energy*0.25)
         # SON IDX
         son_idx = self.idx
-        # SON ENERGY REQUESTED
+        # SON ENERGY PARAMETERS
+        son_energy_needed = self.energy_needed * (1 + random.uniform(-self.mutation_rate, self.mutation_rate))
+        son_extra_energy = self.extra_energy * (1 + random.uniform(-self.mutation_rate, self.mutation_rate))
         son_energy_requested = self.energy_requested * (1 + random.uniform(-self.mutation_rate, self.mutation_rate))
         # MAX ENERGY 
         energy_mutation = random.uniform(0.9, 1.1)

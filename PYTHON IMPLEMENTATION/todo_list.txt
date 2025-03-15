@@ -1,1 +1,2 @@
 - KEEP UNDER EYE THE 4 ISLANDS DISTRIBUTION (it works but the model under the hood is different from the one proposed)
+    -> resampling when a point is outside the edges
