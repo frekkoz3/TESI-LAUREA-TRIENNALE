@@ -315,6 +315,8 @@ class Individual():
         self.mutation_rate = mutation_rate 
         self.energy_requested = energy_requested # THIS IS THE ENERGY A YOUNG INDIVIDUAL REQUEST EVERY TIME HE EAT
         self.idx = idx
+        self.behavior = "N"
+        self.sample_behavior()
 
     def update(self, costs):
         if self.energy <= 0 or self.age >= self.max_age:
@@ -338,8 +340,17 @@ class Individual():
             metabolism = self.age*(-(4*k*Em/(Am*Am))*self.age + (4*k*Em/Am)) # x(ax + b)
             self.energy -= metabolism
             self.age += 1
+            self.sample_behavior()
             return None
     
+    def sample_behavior(self):
+        self.behavior = "N"
+        sample = random.uniform(0, 1)
+        if sample < self.selfishness_param:
+            self.behavior = "S"
+        elif sample < self.selfishness_param + self.altruism_param:
+            self.behavior = "A"
+
     def die(self):
         self.energy = 0
         self.dead = True
@@ -351,12 +362,11 @@ class Individual():
         # The process will in fact think at it 
         actual_communication = 0
         # SAMPLE PROCESS
-        sample = random.uniform(0, 1)
-        if sample < self.selfishness_param:
+        if self.behavior == "S":
             actual_communication = selfish.communicate(self, pop, world)
-        elif sample < self.altruism_param:
+        if self.behavior == "A":
             actual_communication = altruistic.communicate(self, pop, world)
-        else:
+        if self.behavior == "N":
             actual_communication = normal.communicate(self, pop, world)
 
         world.write_communication(actual_communication)
@@ -370,12 +380,11 @@ class Individual():
         # DECISION PROCESS
         actual_decision = "Rest"
         # SAMPLE PROCESS
-        sample = random.uniform(0, 1)
-        if sample < self.selfishness_param:
+        if self.behavior == "S":
             actual_decision = selfish.decision(self, pop, world)
-        elif sample < self.altruism_param:
+        if self.behavior == "A":
             actual_decision = altruistic.decision(self, pop, world)
-        else:
+        if self.behavior == "N":
             actual_decision = normal.decision(self, pop, world)
         # ACTION PROCESS
         split_decision = actual_decision.split("_")
