@@ -12,7 +12,7 @@ import random
 import math
 from vector import *
 
-BLANK_COLOR = (210,240,240)
+BLANK_COLOR = (210,240,240, 255)
 CELL_PARAMS = {"energy" : 0, "minimum" : 0, "maximum" : 0, "regeneration" : 0}
 CELL_SIDE = 20
 COSTS = {
@@ -54,8 +54,8 @@ class Cell():
             return BLANK_COLOR
         # For the color visualization we will have to think about it
         if self.energy < self.minimum_energy_level:
-            return (255, 255*(self.energy/self.minimum_energy_level), 125)
-        return (255, 255*(self.energy/self.maximum_energy_level), 0)
+            return (255, 255*(self.energy/self.minimum_energy_level), 125, 255)
+        return (255, 255*(self.energy/self.maximum_energy_level), 0, 255)
     
     def __str__(self):
         return f"{self.energy}"
@@ -77,13 +77,13 @@ class Information():
     def process(self):
         # THE PROCESS COMPUTE THE WEIGHTED MEAN BY THE NORMS OF THE VECTORS 
         if self.vectors == []: #This is the case where no information is stored
-            self.value = None 
+            self.value = None #Vector(0, 0) # to visualize all the true information layer
         else: # This is the case where a position is free and there are more vectors stored.  We do a weigthed sum of the vectors
             
             vectors_sum = Vector(0, 0)
             for v in self.vectors:
-                vectors_sum += v*v.norm()
-            self.value = vectors_sum*(1/vectors_sum.norm()) if vectors_sum.norm() != 0 else Vector(0, 0) # If there is a food the value will be of + infinity and also if there is only ourself! 
+                vectors_sum += v#*v.norm() not sure this v.norm has a sense
+            self.value = vectors_sum*(1/vectors_sum.norm()) if vectors_sum.norm() != 0 else Vector(0, 0)  
 
     def read(self):
         return self.value
@@ -465,16 +465,16 @@ class Individual():
     def get_color(self):
         # NORMAL BLUE, ALTRUISTIC GREEN, SELFISH RED 
         # YOUNG LIGHT, ADULT DARK
-        young_color = (51, 255, 255) # The default is set for the normal
-        adult_color = (51, 51, 255) # The default is set for the normal
+        young_color = (51, 255, 255, 255) # The default is set for the normal
+        adult_color = (51, 51, 255, 255) # The default is set for the normal
         # SELFISH ONE
         if self.selfishness_param > self.altruism_param and self.selfishness_param > self.normality_param:
-            young_color = (255, 51, 255)
-            adult_color = (255, 51, 51)
+            young_color = (255, 51, 255, 255)
+            adult_color = (255, 51, 51, 255)
         # ALTRUISTIC ONE 
         if self.altruism_param > self.selfishness_param and self.altruism_param > self.normality_param:
-            young_color = (51, 255, 51)
-            adult_color = (0, 204, 0)
+            young_color = (51, 255, 51, 255)
+            adult_color = (0, 204, 0, 255)
         if self.age < self.max_age * self.maturity:
             return young_color
         return adult_color

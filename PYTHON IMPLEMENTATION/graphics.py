@@ -22,7 +22,7 @@ BAR_HEIGHT = 100
 
 BACKGROUND_COLOR = (245,245,220)
 
-FPS = 20
+FPS = 1
 
 def write_report(reporter : StatsReporter):
     reporter.report()
@@ -70,7 +70,7 @@ def draw_world(screen, grid_world : World, field_visualization = True):
                     draw_arrow(screen, start_pos, (normalized_v.x, normalized_v.y), side)
     
 # Draw the agents
-def draw_population(screen, pop : Population):
+def draw_population(screen, pop : Population, grid_world : World, neigh_visualization = False):
     side = pop.cell_side
     font = pygame.font.Font(None, side)  # Default font
     for individual in pop:
@@ -81,15 +81,14 @@ def draw_population(screen, pop : Population):
         text_surface = font.render(str(individual.idx), True, (255, 255, 255)) 
         text_rect = text_surface.get_rect(center=circle_pos)  # Center text on the circle
         screen.blit(text_surface, text_rect)
-
-# This is to see the actual vision of the agents in action
-def draw_neighbourhood(screen, pop : Population, world : World):
-    side = world.cell_side
-    for individual in pop:
-        neigh = world.get_neighbourhood_clip(individual.position, 4)
-        for i in range (neigh[0], neigh[2]+1):
-            for j in range (neigh[1], neigh[3]+1):
-                pygame.draw.rect(screen, pygame.Color(60, 179, 113, 20), pygame.Rect(i*side, j*side, side, side))
+        if neigh_visualization:
+            neigh = grid_world.get_neighbourhood_clip(individual.position, 4)
+            target_rect = pygame.Rect(neigh[0]*side, neigh[1]*side, (neigh[2] - neigh[0])*side, (neigh[3] - neigh[1])*side)
+            neigh_surface = pygame.Surface(target_rect.size, pygame.SRCALPHA)
+            col = list(individual.get_color())
+            col[3] = 50
+            pygame.draw.rect(neigh_surface, col, neigh_surface.get_rect())
+            screen.blit(neigh_surface, target_rect)        
 
 # Draw the statistics bar
 def draw_stats(screen, pop : Population, world : World, camera_x, camera_y, zoom_level, time):
@@ -135,7 +134,7 @@ def play(pop : Population, world : World, init_cond : str, verbose = False, repo
     pygame.display.set_caption("SOCIAL SIMULATION")
 
     # This is the surface where we draw the world
-    w_surface = pygame.Surface((WIDTH, HEIGHT))
+    w_surface = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
     
     clock = pygame.time.Clock()
 
@@ -226,7 +225,7 @@ def play(pop : Population, world : World, init_cond : str, verbose = False, repo
 
         # Call the drawing functions
         draw_world(w_surface, grid_world)
-        draw_population(w_surface, pop)
+        draw_population(w_surface, pop, grid_world)
         
         # This is needed to scale the world surface based on the zoom
         scaled_world = pygame.transform.smoothscale(

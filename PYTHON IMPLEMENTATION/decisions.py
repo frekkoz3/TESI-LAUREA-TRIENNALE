@@ -54,7 +54,7 @@ class DecisionalProcess(ABC):
                 for j in range (0, max_x - min_x + 1):
                     v = Vector(i - actual_pos[0], j - actual_pos[1])
                     v = v*(1/v.norm()) if v.norm() != 0 else v
-                    distance = 1 if (v.x == 0 and v.y == 0) else (abs(i - actual_pos[0]) + abs(j -actual_pos[1]))
+                    distance = 1 if (v.x == 0 and v.y == 0) else (abs(i - actual_pos[0]) + abs(j -actual_pos[1])) # Manhattan Distance
                     communication[i][j] += v*(1/pow(distance, 2)) # This is the vector pointing to the food multiplied by the inverse of the distance from the food
             self.code = 'NF' # This is to remember then what to do 
             return min_y, min_x, max_y, max_x, communication # We communicate to go away from us (No Food found)
