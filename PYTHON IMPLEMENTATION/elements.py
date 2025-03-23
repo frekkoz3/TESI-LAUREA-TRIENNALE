@@ -77,13 +77,13 @@ class Information():
     def process(self):
         # THE PROCESS COMPUTE THE WEIGHTED MEAN BY THE NORMS OF THE VECTORS 
         if self.vectors == []: #This is the case where no information is stored
-            self.value = None #Vector(0, 0) # to visualize all the true information layer
+            self.value = Vector(0, 0) # to visualize all the true information layer
         else: # This is the case where a position is free and there are more vectors stored.  We do a weigthed sum of the vectors
             
             vectors_sum = Vector(0, 0)
             for v in self.vectors:
-                vectors_sum += v#*v.norm() not sure this v.norm has a sense
-            self.value = vectors_sum*(1/vectors_sum.norm()) if vectors_sum.norm() != 0 else Vector(0, 0)  
+                vectors_sum += v
+            self.value = vectors_sum
 
     def read(self):
         return self.value
