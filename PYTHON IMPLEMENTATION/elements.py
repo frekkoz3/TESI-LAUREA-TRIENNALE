@@ -295,7 +295,7 @@ class World():
     
 class Individual():
 
-    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0], radius = 4, maturity = 0.18, energy_needed = 0.6, extra_energy = 0.2, mutation_rate = 0.1, idx = 0, energy_requested = 0.5):
+    def __init__(self, max_age = 100, birth_energy = 20, max_energy = 30, social_param = [1, 0, 0], position = [0, 0], radius = 4, maturity = 18, energy_needed = 0.6, extra_energy = 0.2, mutation_rate = 0.1, idx = 0, energy_requested = 0.5):
         # Now we have to consider that individual will born only once with prefixed values, then it 
         # will depends on the parents state at the moment of the birth
         self.age = 0
@@ -307,7 +307,7 @@ class Individual():
         self.normality_param = social_param[2]
         self.position = position
         self.last_action = 'Rest'
-        self.maturity = maturity # For now we set as follow
+        self.maturity = maturity 
         self.dead = False
         self.radius = radius # THIS IS IMPORTANT
         self.energy_needed = energy_needed  # THIS IS AN IMPORTANT PARAMETER TO TWEAK. It is the minimum quantity of energy requested (ratio) in the adult time while eating
@@ -433,7 +433,7 @@ class Individual():
         # SON RADIUS
         son_radius = self.radius
         # SON MATURITY
-        son_maturity = self.maturity
+        son_maturity = self.maturity * random.uniform(1 - self.mutation_rate, 1 + self.mutation_rate)
         
         # SON MUTATION PARAM
         son_mutation_rate = self.mutation_rate
@@ -475,7 +475,7 @@ class Individual():
         if self.altruism_param > self.selfishness_param and self.altruism_param > self.normality_param:
             young_color = (51, 255, 51, 255)
             adult_color = (0, 204, 0, 255)
-        if self.age < self.max_age * self.maturity:
+        if self.age < self.maturity:
             return young_color
         return adult_color
 
