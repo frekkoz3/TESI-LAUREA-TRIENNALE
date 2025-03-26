@@ -17,11 +17,11 @@ from tkinter import IntVar
 import pickle
 
 INITIAL_CONDITIONS =  {
-            "Size" : 0, "I_Energy" : 0, "I_Age" : 0, "I_Distr" : "Uniform", 
-            "Active" : 0, "C_Min" : 0, "C_Max" : 0, "C_Regen" : 0, "C_Distr" : "Uniform", 
+            "Size" : 100, "I_Energy" : 100, "I_Age" : 100, "I_Maturity" : 18, "I_Distr" : "Uniform", 
+            "Active" : 100, "C_Min" : 100, "C_Max" : 150, "C_Regen" : 10, "C_Distr" : "Uniform", 
             "P_Distr" : "Uniform", 
-            "Move" : 0, "Eat" : 0, "Rest" : 0, "Reproduce" : 0, 
-            "Height" : 0, "Width" : 0
+            "Move" : 1, "Eat" : 1, "Rest" : 0, "Reproduce" : 5, 
+            "Height" : 50, "Width" : 50
             }
 
 def process_parameters(entries, root):
@@ -69,6 +69,7 @@ def inital_condition_GUI():
                 "Size" : ["Scale", 1, 100],
                 "I_Energy" : ["Insert", "Avg Maximum Energy"], 
                 "I_Age" : ["Insert", "Avg Maximum Age"], 
+                "I_Maturity" : ["Insert", "Avg Maturity Age"],
                 "I_Distr" : ["Menu", ["Uniform"]], 
                 "WORLD SETTINGS" : ["Label"],
                 "Active" : ["Scale", 1, 100], 

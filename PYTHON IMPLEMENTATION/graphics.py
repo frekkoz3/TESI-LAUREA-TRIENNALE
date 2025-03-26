@@ -22,7 +22,7 @@ BAR_HEIGHT = 100
 
 BACKGROUND_COLOR = (245,245,220)
 
-FPS = 1
+FPS = 20
 
 def write_report(reporter : StatsReporter):
     reporter.report()
@@ -34,7 +34,10 @@ def message_dialog(text):
             messagebox.showinfo("Message", text)
             root.destroy()
 
-def draw_arrow(screen, start, vector, cell_side, color=(0, 0, 255), arrow_size=3):
+def draw_arrow(screen, start, vector, cell_side, color=(0, 0, 255), arrow_size=3, void_visualization = False):
+    if not void_visualization:
+        if vector[0]==0 and vector[1]==0:
+            return 
     """ Draws an arrow from start position in the direction of vector """
     end = (start[0] + vector[0] * (cell_side // 3), 
            start[1] + vector[1] * (cell_side // 3))

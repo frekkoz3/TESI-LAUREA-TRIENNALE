@@ -27,6 +27,7 @@ class initial_condition_handler():
         self.i_age = init_conds["I_Age"]
         self.i_distr = init_conds["I_Distr"]
         self.p_distr = init_conds["P_Distr"]
+        self.i_maturity = init_conds["I_Maturity"]
         # Cost params
         self.move_cost = init_conds["Move"]
         self.eat_cost = init_conds["Eat"]
@@ -35,8 +36,6 @@ class initial_condition_handler():
 
         # THIS PARAMETERS FOR NOW CAN BE TEWAKED ONLY HERE FOR NOW
         self.base_radius = 4 # THIS IS AN IMPORTANT PARAMETERS -> this is were we set the first one
-        self.maturity = 0.18
-
         self.energy_needed  = 0.6
         self.extra_energy = 0.2
         self.mutation_rate = 0.1
@@ -63,6 +62,7 @@ class initial_condition_handler():
                 }
         
         max_ages = [random.randint(max(0, self.i_age*3//4), self.i_age*5//4) for _ in range (self.size)] # We sample by a uniform in the range [avg_age * 0.75, avg_age * 1.25]
+        maturities = [random.randint(max(0, self.i_maturity*3//4), self.i_maturity*5//4) for _ in range (self.size)] # We sample by a uniform in the range [avg_age * 0.75, avg_age * 1.25]
         max_energies = [random.randint(max(0, self.i_energy*3//4), self.i_energy*5//4) for _ in range (self.size)] # We sample by a uniform in the range [avg_energy * 0.75, avg_energy * 1.25]
         birth_energies = [max_en * random.uniform(0.25, 0.5) for max_en in max_energies] #  The birth energy is set as the max_energy by a random factor that goes from 0.25 to 0.5 -> MAYBE TO TWEAK 
         position = [[random.randrange(0, self.height), random.randrange(0, self.width)] for _ in range (self.size)] #  This is the uniform distribution init -> this should be implemented in the Population class!
@@ -75,7 +75,7 @@ class initial_condition_handler():
         social_params = [[p + random.uniform(-p, p) for p in Params[self.p_distr]] for _ in range (self.size)]
         normalizing_sum = [sum(sp) for sp in social_params]
         social_params = [[sp/n_s for sp in social_params[i]] for i, n_s in enumerate(normalizing_sum)]
-        population = Population([Individual(max_ages[i], birth_energies[i], max_energies[i], social_params[i], position[i], radius = self.base_radius, maturity = self.maturity, energy_needed = self.energy_needed, extra_energy = self.extra_energy, mutation_rate = self.mutation_rate, idx=i, energy_requested=self.energy_requested) for i in range (self.size)])
+        population = Population([Individual(max_age = max_ages[i], birth_energy = birth_energies[i], max_energy = max_energies[i], social_param = social_params[i], position = position[i], radius = self.base_radius, maturity = maturities[i], energy_needed = self.energy_needed, extra_energy = self.extra_energy, mutation_rate = self.mutation_rate, idx=i, energy_requested=self.energy_requested) for i in range (self.size)])
         return population
     
     def cost_handler(self):
@@ -97,7 +97,6 @@ class initial_condition_handler():
         for k in list(self.init_conds.keys()):
             s += f"{k} : {self.init_conds[k]}\n"
         s += f"Radius : {self.base_radius}\n"
-        s += f"Maturity : {self.maturity}\n"
         s += f"Energy Needed : {self.energy_needed}\n"
         s += f"Extra Energy : {self.extra_energy}\n"
         s += f"Energy Requeste : {self.energy_requested}\n"

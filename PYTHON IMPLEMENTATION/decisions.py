@@ -128,6 +128,7 @@ class DecisionalProcess(ABC):
                     food.append([i, j])
 
         def check_movement(actual_pos, movement, danger_pos):
+            #return True
             # This is done to check if a movement leads to a danger position
             direction = movement.split("_")[1]
             y, x = actual_pos[0], actual_pos[1]
@@ -161,7 +162,7 @@ class DecisionalProcess(ABC):
 
         direction_vector = info[actual_pos[0]][actual_pos[1]].value.closer_orientation()
 
-        if individual.age < individual.max_age * maturity:
+        if individual.age < maturity:
             # THE YOUNG INDIVIDUAL IS GREEDY FOR FOOD BUT IT IS CAREFUL of the other -> we need a layer where we put all of this
             # FIRST THING FIRST : if it is on food and can actually eat, he eat
             if actual_pos in food and individual.last_action.split("_")[0] != "Eat": # Now he can eat
@@ -170,12 +171,7 @@ class DecisionalProcess(ABC):
             elif actual_pos in food and individual.last_action.split("_")[0] == "Eat": # He must move somewhere (gonna think if necessary)
                 # Case where he just have eaten or no information available
                 act = random_movement(actual_pos, available_action, danger_pos)
-            elif len(food) > 0: # If there is food we follow the information field
-                act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
-            else: # This is the case where we know only about our position (and maybe someone else position)
-                # If we have only spatial information and no food information we compute the better direction where to go
-                information_sum = vector_sum(info)
-                direction_vector = information_sum.closer_orientation()
+            else: # If there is food we follow the information field
                 act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
 
         else: # Adult time
@@ -194,12 +190,7 @@ class DecisionalProcess(ABC):
                     elif actual_pos in food: # Case where he can eat. He won't eat again cause it will move away
                         to_eat = max_energy * (energy_need + extra_energy) - energy 
                         act = f"Eat_{to_eat}"
-                    elif len(food) > 0:
-                        act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
-                    else:# This is the case where we know only about our position.
-                        # If we have spatial information we compute the better direction where to go
-                        information_sum = vector_sum(info)
-                        direction_vector = information_sum.closer_orientation()
+                    else:
                         act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
 
                 else: # This is the case where we are searching for peace
