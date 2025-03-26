@@ -181,21 +181,14 @@ class DecisionalProcess(ABC):
             extra_energy = individual.extra_energy # THIS PARAMETERS TELLS US HOW MUCH EXTRA ENERGY WE TAKE for searching peace
             if len(danger_pos) == 0 and energy >= max_energy*energy_need and not(actual_pos in food) and "Reproduce" in available_action:
                     act = "Reproduce"
+            elif energy < max_energy * energy_need:
+                if actual_pos in food:
+                    to_eat = max_energy * (energy_need + extra_energy) - energy 
+                    act = f"Eat_{to_eat}"
+                else:
+                    act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
             else:
-                if energy < max_energy * energy_need: # In this case he's gonna search for the food. He's not scared of others
-                    # WE NEED TO THINK ABOUT WHEN HE HAVE JUST REPRODUCED : he can't reproduce on the food and if he have just reproduced he can't go for food
-                    # THEN WE HAVE TO THINK ABOUT THE CHILDREN : maybe we should add a relation between adult and son, that if our son is in our space we let him go for the food
-                    if individual.last_action == "Reproduce": # Case where he just have reproduced, so he goes away from food to let the kid have it
-                        act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act, rotate=True)
-                    elif actual_pos in food: # Case where he can eat. He won't eat again cause it will move away
-                        to_eat = max_energy * (energy_need + extra_energy) - energy 
-                        act = f"Eat_{to_eat}"
-                    else:
-                        act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
-
-                else: # This is the case where we are searching for peace
-                    # We just go away from food
-                    act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act, rotate=True)
+                act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act, rotate=True)
 
         # TO BREAK THE LOOP WE INSERT THIS LITTLE PROBABILITY OF RANDOM MOVEMENT (1%)
         if act.split("_")[0] == "Move":
