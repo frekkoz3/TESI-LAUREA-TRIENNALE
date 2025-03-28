@@ -1,4 +1,6 @@
-# SOCIAL GRID WORLD
+#Social IFABaM
+---
+This is the official repo of my Bachelor thesis. As soon as possible this read me will be changed with the official paper written in latex. 
 
 Questa è la repo della mia tesi di laurea.
 In questa mia tesi esplorerò un grid world in cui più individui convivono simultaneamente.
