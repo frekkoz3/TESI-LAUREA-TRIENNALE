@@ -5,10 +5,11 @@ $c$ & Position of a cell in the form (x, y)\\
 $E_c$ & Energy Cell in position c\\
 $E_{c_t}$ & Energy Stored Energy Cell at time t\\
 $E_{c_{max}}$ & Maximum Energy Level of the Energy Cell\\
-$E_{c_{reg}}$ & Regenaration Rate of the Energy Cell\\
+$E_{c_{reg}}$ & Regeneration Rate of the Energy Cell\\
 $E_{c_{max}}$ & Minimum Critical Energy Level of the Energy Cell\\
 $I$ & Individual\\
 $\mathcal(A)$ & Actions Set\\
+$\mathcal(A)_p$ & Possible Action Set\\
 $\mathcal(B)$ & Behaviors Set\\
 $I_a$ & Age of an Individual\\
 $I_{a_{max}}$ & Maximum Age of an Individual\\
@@ -29,3 +30,6 @@ $C$ & Cost\\
 $S_s$ & Selfishness Parameter\\
 $S_a$ & Altruism Parameter\\
 $S_n$ & Normality Parameter\\
+$\mathcal{L}$ & Information Layer\\
+$L_n$ & Information Neighborhood\\
+

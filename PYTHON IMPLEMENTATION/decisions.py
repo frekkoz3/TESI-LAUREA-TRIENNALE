@@ -55,7 +55,7 @@ class DecisionalProcess(ABC):
                     v = Vector(i - actual_pos[0], j - actual_pos[1])
                     v = v*(1/v.norm()) if v.norm() != 0 else v
                     distance = 1 if (v.x == 0 and v.y == 0) else (abs(i - actual_pos[0]) + abs(j -actual_pos[1])) # Manhattan Distance
-                    communication[i][j] += v*(1/pow(distance, 2)) # This is the vector pointing to the food multiplied by the inverse of the distance from the food
+                    communication[i][j] += v*(1/pow(distance, 2)) # This is the vector pointing away from us multiplied by the inverse of the distance from us
             self.code = 'NF' # This is to remember then what to do 
             return min_y, min_x, max_y, max_x, communication # We communicate to go away from us (No Food found)
 
@@ -70,8 +70,11 @@ class DecisionalProcess(ABC):
         # We fix at the end some special position
         for f in foods:
             communication[f[0]][f[1]] = Vector(0, 0) # here there is some food
-            # communication[actual_pos[0]][actual_pos[1]] = float("inf") # NOT NEEDED SINCE WE USE THE POSITION LAYER
-    
+        for i in range (0, max_y-min_y + 1): # DANGER POSITION WRITTEN IN THE INFORMATION LAYER
+            for j in range (0, max_x - min_x + 1):
+                if (i, j) in [(actual_pos[0] - 1, actual_pos[1]), (actual_pos[0] + 1, actual_pos[1]), (actual_pos[0], actual_pos[1] - 1), (actual_pos[0], actual_pos[1] + 1)]:
+                    v = Vector(i - actual_pos[0], j - actual_pos[1])
+                    communication[i][j] = v*((2*individual.radius -1)*(2*individual.radius -1)) # This is the vector pointing away from us with the norm equal to the maximum of point into the neighborhood
         self.code = 'F'
         return min_y, min_x, max_y, max_x, communication
 
@@ -94,31 +97,12 @@ class DecisionalProcess(ABC):
         min_y, min_x, max_y, max_x = world.get_neighbourhood_clip(pos, r)
         seen = world.get_neighbourhood(pos, r) 
         info = world.get_neighbourhood_information(pos, r)
-        others = world.get_neighbourhood_position(pos, r)
         actual_pos = [pos[0] - min_y, pos[1] - min_x]
         # Available action
         available_action = []
         for a in POSSIBILITIES:
             if self.action_checker.legitimacy(a, individual, world):
-                available_action.append(a)
-
-        # Search for danger :
-        # and load information count
-        danger_pos = []
-        information_count = 0
-        for i in range (0, max_y - min_y):
-            for j in range (0, max_x - min_x):
-                if isinstance(info[i][j].value, Vector): # This is done to check before if food information are actually found
-                    information_count += 1
-                if others[i][j] and not (i == actual_pos[0] and j == actual_pos[1]): # This means there is an individual in that location
-                    # We set as danger all possible position reachable from others individual.
-                    # No matter if we set as danger an impossible position, no matter how the individual
-                    # Will never reach it
-                    danger_pos.append([i, j-1])
-                    danger_pos.append([i-1, j])
-                    danger_pos.append([i, j+1])
-                    danger_pos.append([i+1, j])
-                    danger_pos.append([i, j])
+                available_action.append(a)               
 
         # Search for food :
         food = []
@@ -127,37 +111,26 @@ class DecisionalProcess(ABC):
                 if seen[i][j].energy > 0: # This means there is a food available
                     food.append([i, j])
 
-        def check_movement(actual_pos, movement, danger_pos):
-            #return True
-            # This is done to check if a movement leads to a danger position
-            direction = movement.split("_")[1]
-            y, x = actual_pos[0], actual_pos[1]
-            new_x = x - 1 if direction == 'W' else x 
-            new_x = new_x + 1 if direction == 'E' else new_x
-            new_y = y + 1 if direction == 'S' else y
-            new_y = new_y - 1 if direction == 'N' else new_y
-            return [new_y, new_x] not in danger_pos
-        
-        def random_movement(actual_pos, available_action, danger_pos):
-            movements = ["Move_N", "Move_W", "Move_S", "Move_E"] # Choose one random among of them that lead to a safe place
+        def random_movement(available_action):
+            movements = ["Move_N", "Move_W", "Move_S", "Move_E", "Rest"] # Choose one random among of them that lead to a safe place
             random.shuffle(movements)
             for a in movements:
-                if a in available_action and check_movement(actual_pos, a, danger_pos):
+                if a in available_action:
                     return a
             return "Rest"
         
-        def basic_logic(actual_pos, available_action, danger_pos, direction_vector, act, rotate = False):
+        def basic_logic(available_action, direction_vector, act, rotate = False):
             if direction_vector == (0, 0):
-                act = random_movement(actual_pos, available_action, danger_pos)
+                act = random_movement(available_action)
             else:
                 if rotate:
                     direction_vector = direction_vector.rotate(180).closer_orientation() # does to prevent numerical error
                 better_direction = translate_direction(direction_vector)
-                if check_movement(actual_pos, f"Move_{better_direction}", danger_pos) and f"Move_{better_direction}" in available_action: # If we can we take it if not amen
+                if f"Move_{better_direction}" in available_action: # If we can we take it if not amen
                     act = f"Move_{better_direction}"
             return act
 
-        act = random_movement(actual_pos, available_action, danger_pos) # default
+        act = random_movement(available_action) # default
         # to see what happens if we assing rest action at the (0, 0)
 
         direction_vector = info[actual_pos[0]][actual_pos[1]].value.closer_orientation()
@@ -165,35 +138,35 @@ class DecisionalProcess(ABC):
         if individual.age < maturity:
             # THE YOUNG INDIVIDUAL IS GREEDY FOR FOOD BUT IT IS CAREFUL of the other -> we need a layer where we put all of this
             # FIRST THING FIRST : if it is on food and can actually eat, he eat
-            if actual_pos in food and individual.last_action.split("_")[0] != "Eat": # Now he can eat
+            if "Eat_1" in available_action: # Now he can eat
                 to_eat = (individual.max_energy - individual.energy) * individual.energy_requested # He asks for a portion of what he need to fullfill
                 act = f"Eat_{to_eat}"
             elif actual_pos in food and individual.last_action.split("_")[0] == "Eat": # He must move somewhere (gonna think if necessary)
                 # Case where he just have eaten or no information available
-                act = random_movement(actual_pos, available_action, danger_pos)
+                act = random_movement(available_action)
             else: # If there is food we follow the information field
-                act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
+                act = basic_logic(available_action, direction_vector, act)
 
         else: # Adult time
             energy = individual.energy
             max_energy = individual.max_energy
             energy_need = individual.energy_needed # THIS IS AN IMPORTANT PARAMETER TO TWEAK. It is the minimum quantity of energy requested (ratio) 
             extra_energy = individual.extra_energy # THIS PARAMETERS TELLS US HOW MUCH EXTRA ENERGY WE TAKE for searching peace
-            if len(danger_pos) == 0 and energy >= max_energy*energy_need and not(actual_pos in food) and "Reproduce" in available_action:
+            if "Reproduce" in available_action:
                     act = "Reproduce"
-            elif energy < max_energy * energy_need:
-                if actual_pos in food:
+            elif energy < max_energy * energy_need: # If we need to eat we gonna find it
+                if "Eat_1" in available_action:
                     to_eat = max_energy * (energy_need + extra_energy) - energy 
                     act = f"Eat_{to_eat}"
                 else:
-                    act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act)
-            else:
-                act = basic_logic(actual_pos, available_action, danger_pos, direction_vector, act, rotate=True)
+                    act = basic_logic(available_action, direction_vector, act)
+            else: # If we need space we are gonna seek it
+                act = basic_logic(available_action, direction_vector, act, rotate=True)
 
         # TO BREAK THE LOOP WE INSERT THIS LITTLE PROBABILITY OF RANDOM MOVEMENT (1%)
         if act.split("_")[0] == "Move":
             if random.uniform(0, 1) < 0.01:
-                act = random_movement(actual_pos, available_action, danger_pos)
+                act = random_movement(available_action)
 
         return act 
 
