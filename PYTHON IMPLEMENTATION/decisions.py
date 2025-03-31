@@ -141,9 +141,6 @@ class DecisionalProcess(ABC):
             if "Eat_1" in available_action: # Now he can eat
                 to_eat = (individual.max_energy - individual.energy) * individual.energy_requested # He asks for a portion of what he need to fullfill
                 act = f"Eat_{to_eat}"
-            elif actual_pos in food and individual.last_action.split("_")[0] == "Eat": # He must move somewhere (gonna think if necessary)
-                # Case where he just have eaten or no information available
-                act = random_movement(available_action)
             else: # If there is food we follow the information field
                 act = basic_logic(available_action, direction_vector, act)
 
