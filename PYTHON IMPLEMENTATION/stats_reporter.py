@@ -158,7 +158,7 @@ class StatsReporter:
 
             ts = np.array(self.horizons)
 
-            time_serie_plot(np.linspace(0, self.n_simulation, self.n_simulation), ts, "Simulations", "Horizons over simulations", filename=self.img_path+"Horizons.png")
+            time_serie_plot(np.linspace(0, self.n_simulation - 1, self.n_simulation), ts, "Simulations", "Horizons over simulations", filename=self.img_path+"Horizons.png")
             pdf.add_plot(plot_filename=self.img_path+"Horizons.png")
             pdf.add_text(f"Mean : {np.mean(ts)}", size = 8, spacing = 8)
             pdf.add_text(f"Variance : {np.var(ts)}", size = 8, spacing = 8)

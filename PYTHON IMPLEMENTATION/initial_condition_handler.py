@@ -49,7 +49,7 @@ class initial_condition_handler():
         self.population = self.individual_handler()        
 
     def world_handler(self):
-        world = World(self.width, self.height, cell_energy=(self.c_max+self.c_min)/2, parameters = {"energy" : 0, "minimum" : self.c_min, "maximum" : self.c_max, "regeneration" : self.c_regen}, costs=self.cost_handler(), initially_alive=self.initially_alive, distribution=self.c_distr)
+        world = World(self.width, self.height, cell_energy=(self.c_max+self.c_min)/2, parameters = {"energy" : 0, "minimum" : self.c_min, "maximum" : self.c_max, "regeneration" : self.c_regen}, costs=self.cost_handler(), initially_alive=self.initially_alive, distribution=self.c_distr, seed = self.seed)
         # WELL THERE ARE SOME PARAMETERS WE SHOULD IMPLEMENT BEFORE 
         return world
 

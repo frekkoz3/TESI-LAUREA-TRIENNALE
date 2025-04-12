@@ -99,7 +99,7 @@ class Information():
     
 class World():
 
-    def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, initially_alive = 1, costs = COSTS, distribution = "Uniform"):
+    def __init__(self, length, height, cell_energy = 10, parameters = {"energy" : 0, "minimum" : 5, "maximum" : 20, "regeneration" : 1}, initially_alive = 1, costs = COSTS, distribution = "Uniform", seed = None):
         # The density parameter tell the portion of cells that should be activate
         self.length = length
         self.height = height
@@ -113,9 +113,12 @@ class World():
         self.__position_layer__ = [[False for l in range (self.length)] for h in range (self.height)]
         self.mean_energy = 0
         self.distribution = distribution
+        self.seed = seed
         self.populate()
     
     def populate(self):
+        random.seed(self.seed) # If needed we fix the seed
+
         if self.distribution == "Uniform" or self.distribution == "Uniform no regen":
             # For now we just activate the right amount of cells into the totals. Then we will think about more
             to_active = self.initially_alive
@@ -144,7 +147,9 @@ class World():
                 if self.__cells__[idx_1][idx_2].energy == 0:
                     self.__cells__[idx_1][idx_2].charge_energy(self.cell_energy)
                     to_active -= 1
-        
+
+        random.seed(None) # Then the seed is randomized again
+
     def compute_mean_energy(self):
         # This is the mean of the energy of the active cells
         self.mean_energy = 0

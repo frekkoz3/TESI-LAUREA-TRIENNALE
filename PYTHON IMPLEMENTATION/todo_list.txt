@@ -1,2 +1,3 @@
-- KEEP UNDER EYE THE 4 ISLANDS DISTRIBUTION (it works but the model under the hood is different from the one proposed)
-    -> resampling when a point is outside the edges
+-> IMPLEMENT THE REPORTS CORRECTLY (now it is only implemented the possibility of multiple simulation)
+-> IMPLEMENT THE SPATIAL DISTRIBUTION REPORT
+-> IMPLEMENT THE JUMP MECHANIC
