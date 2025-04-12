@@ -32,4 +32,4 @@ $S_a$ & Altruism Parameter\\
 $S_n$ & Normality Parameter\\
 $\mathcal{L}$ & Information Layer\\
 $L_n$ & Information Neighborhood\\
-
+$P_L$ & Position Layer\\

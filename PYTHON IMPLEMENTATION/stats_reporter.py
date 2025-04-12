@@ -85,7 +85,7 @@ def parameters_plot(x, s, a, n, filename, figsize =(10, 5)):
 
 class StatsReporter:
 
-    def __init__(self, initial_condition, file_path = "REPORT/", folder_name_mode = 'Date_Time'):
+    def __init__(self, initial_condition,  n_simulation, file_path = "REPORT/", folder_name_mode = 'Date_Time', time_window = 100):
         
         self.current_time = get_current_datetime()
         if folder_name_mode == 'Date_Time': # Date time name
@@ -93,113 +93,123 @@ class StatsReporter:
         else: # folder_name_mode == 'Console': # Console input
             self.folder_name = input("Insert the name for the folder where to save the report: ")
 
-
         # Create the folder (if it doesn't exist)
         os.makedirs(file_path + self.folder_name, exist_ok=True)
 
+        self.n_simulation = n_simulation
+        self.time_window = time_window
+        
         self.t = 0
-        self.alive_population = []
-        self.alive_cell = []
-        self.birth = []
-        self.death = []
-        self.mean_population_energy = []
-        self.mean_world_energy = []
-        self.selfish_mean_param = []
-        self.altruism_mean_param = []
-        self.normal_mean_param = []
-        self.mean_population_age = []
-        self.heritage = []
-        self.different_heritage = []
+        self.alive_population = [[] for s in range(self.n_simulation)]
+        self.alive_cell = [[] for s in range(self.n_simulation)]
+        self.mean_population_energy = [[] for s in range(self.n_simulation)]
+        self.mean_world_energy = [[] for s in range(self.n_simulation)]
+        self.selfish_mean_param = [[] for s in range(self.n_simulation)]
+        self.altruism_mean_param = [[] for s in range(self.n_simulation)]
+        self.normal_mean_param = [[] for s in range(self.n_simulation)]
+        self.mean_population_age = [[] for s in range(self.n_simulation)]
+        self.heritage = [[] for s in range(self.n_simulation)]
+        self.different_heritage = [[] for s in range(self.n_simulation)]
         self.initial_condition = str(initial_condition) # it will be done by the initial condition handler everything to make it rigth
         self.file_path = file_path + self.folder_name + "/stats report.pdf"
         self.img_path = file_path + self.folder_name +"/"
+        self.positions = [[] for s in range(self.n_simulation)]
+        self.horizons = [0 for s in range(self.n_simulation)]
+        self.windows_horizons = [0 for s in range(self.n_simulation)]
     
-    def update(self,  population : Population, world : World):
-        self.alive_population.append(population.alive())
-        self.alive_cell.append(world.alive())
-        self.birth.append(population.born) # Born at every time stamp
-        self.death.append(population.dead) # Dead at every time stamp
-        self.mean_population_energy.append(population.mean_energy)
-        self.mean_world_energy.append(world.mean_energy)
-        social_mean_param = population.mean_parameters
-        self.selfish_mean_param.append(social_mean_param[0])
-        self.altruism_mean_param.append(social_mean_param[1])
-        self.normal_mean_param.append(social_mean_param[2])
-        self.heritage.append(population.heritage)
-        self.different_heritage.append(len(set(population.heritage)))
-        self.mean_population_age.append(population.mean_age)
+    def update(self,  population : Population, world : World, simulation_number : int):
         self.t += 1
+        s = simulation_number
+        if self.t % self.time_window == 0:
+            self.alive_population[s].append(population.alive())
+            self.alive_cell[s].append(world.alive())
+            self.mean_population_energy[s].append(population.mean_energy)
+            self.mean_world_energy[s].append(world.mean_energy)
+            social_mean_param = population.get_behaviors()
+            self.selfish_mean_param[s].append(social_mean_param.count("S"))
+            self.altruism_mean_param[s].append(social_mean_param.count("A"))
+            self.normal_mean_param[s].append(social_mean_param.count("N"))
+            self.heritage[s].append(population.heritage)
+            self.different_heritage[s].append(len(set(population.heritage)))
+            self.mean_population_age[s].append(population.mean_age)
+            p = [1 if w_p else 0 for w_p in world.get_position()]
+            self.positions[s].append(p)
     
-    def report(self):
-        pdf = PDFReport(self.file_path)
-        # DATE TIME
-        pdf.add_text(text=f"Test done {self.current_time.split(" ")[0]} at {self.current_time.split(" ")[1]}", size = 10)
+    def report(self, simulation_number, forced_end = False):
 
-        # INITIAL CONDITION - note that they are not really all the initial condition
-        pdf.add_text("Initial condition", size = 9, spacing = 10)
-        for cond in self.initial_condition.split("\n"):
-            pdf.add_text(text=cond, size=8, spacing=10)
+        self.horizons[simulation_number] = self.t
+        self.windows_horizons[simulation_number] = self.t//self.time_window
         
-        # POPULATION OVER TIME PLOT
-        time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.alive_population), "Population", "Population over time", filename=self.img_path+"Population over time.png")
-        pdf.add_plot(plot_filename=self.img_path+"Population over time.png")
-        pdf.add_text(f"Mean : {np.mean(np.array(self.alive_population))}", size = 8, spacing = 8)
-        pdf.add_text(f"Variance : {np.var(np.array(self.alive_population))}", size = 8, spacing = 8)
-        pdf.add_text(f"Min : {np.min(np.array(self.alive_population))}", size = 8, spacing = 8)
-        pdf.add_text(f"Max : {np.max(np.array(self.alive_population))}", size = 8, spacing = 8)
+        if simulation_number == (self.n_simulation - 1) or forced_end:
 
-        # CELL OVER TIME PLOT
-        time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.alive_cell), "Cell", "Cell over time", filename=self.img_path+"Cell over time.png")
-        pdf.add_plot(plot_filename=self.img_path+"Cell over time.png")
+            pdf = PDFReport(self.file_path)
+            # DATE TIME
+            pdf.add_text(text=f"Test done {self.current_time.split(" ")[0]} at {self.current_time.split(" ")[1]}", size = 10)
+            pdf.add_text(text=f"Number of simulation done : {simulation_number + 1}. The window time of the simulation is {self.time_window}", size = 6)
+            if forced_end:
+                pdf.add_text(text=f"!!! THIS SIMULATION HAS BEEN EARLY STOPPED !!!", size = 6)
 
-        # BIRTH OVER TIME PLOT
-        time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.birth), "Birth", "Birth over time", filename=self.img_path+"Birth over time.png")
-        pdf.add_plot(plot_filename=self.img_path+"Birth over time.png")
-        pdf.add_text(f"Mean : {np.mean(np.array(self.birth))}", size = 8, spacing = 8)
-        pdf.add_text(f"Variance : {np.var(np.array(self.birth))}", size = 8, spacing = 8)
-        pdf.add_text(f"Min : {np.min(np.array(self.birth))}", size = 8, spacing = 8)
-        pdf.add_text(f"Max : {np.max(np.array(self.birth))}", size = 8, spacing = 8)
+            # INITIAL CONDITION - note that they are not really all the initial condition
+            pdf.add_text("Initial condition", size = 9, spacing = 10)
+            for cond in self.initial_condition.split("\n"):
+                pdf.add_text(text=cond, size=8, spacing=10)
 
-        # DEATH OVER TIME PLOT
-        time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.death), "Death", "Death over time", filename=self.img_path+"Death over time.png")
-        pdf.add_plot(plot_filename=self.img_path+"Death over time.png")
-        pdf.add_text(f"Mean : {np.mean(np.array(self.death))}", size = 8, spacing = 8)
-        pdf.add_text(f"Variance : {np.var(np.array(self.death))}", size = 8, spacing = 8)
-        pdf.add_text(f"Min : {np.min(np.array(self.death))}", size = 8, spacing = 8)
-        pdf.add_text(f"Max : {np.max(np.array(self.death))}", size = 8, spacing = 8)
-        
-        # MEAN POPULATION ENERGY OVER TIME
-        time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_population_energy), "Mean Population Energy", "Mean Population Energy over time", filename=self.img_path+"Mean Population Energy over time.png")
-        pdf.add_plot(plot_filename=self.img_path+"Mean Population Energy over time.png")
-        pdf.add_text(f"Mean : {np.mean(np.array(self.mean_population_energy))}", size = 8, spacing = 8)
-        pdf.add_text(f"Variance : {np.var(np.array(self.mean_population_energy))}", size = 8, spacing = 8)
+            # HORIZONS OF ALL SIMULATIONS
 
-        # MEAN POPULATION AGE OVER TIME
-        time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_population_age), "Mean Population Age", "Mean Population Age over time", filename=self.img_path+"Mean Population Age over time.png")
-        pdf.add_plot(plot_filename=self.img_path+"Mean Population Age over time.png")
-        pdf.add_text(f"Mean : {np.mean(np.array(self.mean_population_age))}", size = 8, spacing = 8)
-        pdf.add_text(f"Variance : {np.var(np.array(self.mean_population_age))}", size = 8, spacing = 8)
+            ts = np.array(self.horizons)
 
+            time_serie_plot(np.linspace(0, self.n_simulation, self.n_simulation), ts, "Simulations", "Horizons over simulations", filename=self.img_path+"Horizons.png")
+            pdf.add_plot(plot_filename=self.img_path+"Horizons.png")
+            pdf.add_text(f"Mean : {np.mean(ts)}", size = 8, spacing = 8)
+            pdf.add_text(f"Variance : {np.var(ts)}", size = 8, spacing = 8)
 
-        # MEAN WORLD ENERGY OVER TIME
-        time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_world_energy), "Mean World Energy", "Mean World Energy over time", filename=self.img_path+"Mean World Energy over time.png")
-        pdf.add_plot(plot_filename=self.img_path+"Mean World Energy over time.png")
+            """
+            # POPULATION OVER TIME PLOT
 
-        # MEAN SOCIAL PARAMETERS OVER TIME
-        parameters_plot(np.linspace(0, self.t, self.t), np.array(self.selfish_mean_param), np.array(self.altruism_mean_param), np.array(self.normal_mean_param), filename=self.img_path+"Mean Social Parameters over time.png")
-        pdf.add_plot(plot_filename=self.img_path+"Mean Social Parameters over time.png")
+            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.alive_population), "Population", "Population over time", filename=self.img_path+"Population over time.png")
+            pdf.add_plot(plot_filename=self.img_path+"Population over time.png")
+            pdf.add_text(f"Mean : {np.mean(np.array(self.alive_population))}", size = 8, spacing = 8)
+            pdf.add_text(f"Variance : {np.var(np.array(self.alive_population))}", size = 8, spacing = 8)
+            pdf.add_text(f"Min : {np.min(np.array(self.alive_population))}", size = 8, spacing = 8)
+            pdf.add_text(f"Max : {np.max(np.array(self.alive_population))}", size = 8, spacing = 8)
 
-        # DIFFERENT HERITAGE COUNT OVER TIME
-        time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.different_heritage), "Different Heritage", "Different Heritage over time", filename=self.img_path+"Different Heritage over time.png")
-        pdf.add_plot(plot_filename=self.img_path+"Different Heritage over time.png")
+            # CELL OVER TIME PLOT
+            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.alive_cell), "Cell", "Cell over time", filename=self.img_path+"Cell over time.png")
+            pdf.add_plot(plot_filename=self.img_path+"Cell over time.png")
+            
+            # MEAN POPULATION ENERGY OVER TIME
+            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_population_energy), "Mean Population Energy", "Mean Population Energy over time", filename=self.img_path+"Mean Population Energy over time.png")
+            pdf.add_plot(plot_filename=self.img_path+"Mean Population Energy over time.png")
+            pdf.add_text(f"Mean : {np.mean(np.array(self.mean_population_energy))}", size = 8, spacing = 8)
+            pdf.add_text(f"Variance : {np.var(np.array(self.mean_population_energy))}", size = 8, spacing = 8)
 
-        # META DATA
-        pdf.add_text(text="Author : Francesco Bredariol", size = 7, spacing = 7)
-        pdf.add_text(text="Year : 2024/2025", size = 7, spacing = 7)
-        pdf.add_text(text="This Project is done for the academic purpose of implementing the practical part of the Degree Thesis in Artificial Intelligence and Data Analytics.", size = 7, spacing = 7)
-        
-        pdf.save_pdf()
-        print(f"Pdfcreated succesfully. You can find it at {self.file_path}")
+            # MEAN POPULATION AGE OVER TIME
+            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_population_age), "Mean Population Age", "Mean Population Age over time", filename=self.img_path+"Mean Population Age over time.png")
+            pdf.add_plot(plot_filename=self.img_path+"Mean Population Age over time.png")
+            pdf.add_text(f"Mean : {np.mean(np.array(self.mean_population_age))}", size = 8, spacing = 8)
+            pdf.add_text(f"Variance : {np.var(np.array(self.mean_population_age))}", size = 8, spacing = 8)
+
+            # MEAN WORLD ENERGY OVER TIME
+            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_world_energy), "Mean World Energy", "Mean World Energy over time", filename=self.img_path+"Mean World Energy over time.png")
+            pdf.add_plot(plot_filename=self.img_path+"Mean World Energy over time.png")
+
+            # MEAN SOCIAL PARAMETERS OVER TIME
+            parameters_plot(np.linspace(0, self.t, self.t), np.array(self.selfish_mean_param), np.array(self.altruism_mean_param), np.array(self.normal_mean_param), filename=self.img_path+"Mean Social Parameters over time.png")
+            pdf.add_plot(plot_filename=self.img_path+"Mean Social Parameters over time.png")
+
+            # DIFFERENT HERITAGE COUNT OVER TIME
+            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.different_heritage), "Different Heritage", "Different Heritage over time", filename=self.img_path+"Different Heritage over time.png")
+            pdf.add_plot(plot_filename=self.img_path+"Different Heritage over time.png")
+            """
+            # META DATA
+            pdf.add_text(text="Author : Francesco Bredariol", size = 7, spacing = 7)
+            pdf.add_text(text="Year : 2024/2025", size = 7, spacing = 7)
+            pdf.add_text(text="This Project is done for the academic purpose of implementing the practical part of the Degree Thesis in Artificial Intelligence and Data Analytics.", size = 7, spacing = 7)
+            
+            pdf.save_pdf()
+            print(f"Pdfcreated succesfully. You can find it at {self.file_path}")
+
+        self.t = 0
 
 if __name__ == "__main__":
     pass

@@ -12,6 +12,10 @@ class initial_condition_handler():
 
     def __init__(self, init_conds : dict):
         self.init_conds = init_conds
+        # Simulation param
+        self.n_simulations = init_conds["N_Simulations"]
+        self.seed = init_conds["Seed"]
+        
         # World param
         self.height = init_conds["Height"]
         self.width = init_conds["Width"]
@@ -28,6 +32,7 @@ class initial_condition_handler():
         self.i_distr = init_conds["I_Distr"]
         self.p_distr = init_conds["P_Distr"]
         self.i_maturity = init_conds["I_Maturity"]
+        self.base_radius = init_conds["Radius"] # THIS IS AN IMPORTANT PARAMETERS -> this is were we set the first one
         # Cost params
         self.move_cost = init_conds["Move"]
         self.eat_cost = init_conds["Eat"]
@@ -35,7 +40,6 @@ class initial_condition_handler():
         self.reproduce_cost = init_conds["Reproduce"]
 
         # THIS PARAMETERS FOR NOW CAN BE TEWAKED ONLY HERE FOR NOW
-        self.base_radius = 4 # THIS IS AN IMPORTANT PARAMETERS -> this is were we set the first one
         self.energy_needed  = 0.6
         self.extra_energy = 0.2
         self.mutation_rate = 0.1
@@ -65,13 +69,15 @@ class initial_condition_handler():
         maturities = [random.randint(max(0, self.i_maturity*3//4), self.i_maturity*5//4) for _ in range (self.size)] # We sample by a uniform in the range [avg_age * 0.75, avg_age * 1.25]
         max_energies = [random.randint(max(0, self.i_energy*3//4), self.i_energy*5//4) for _ in range (self.size)] # We sample by a uniform in the range [avg_energy * 0.75, avg_energy * 1.25]
         birth_energies = [max_en * random.uniform(0.25, 0.5) for max_en in max_energies] #  The birth energy is set as the max_energy by a random factor that goes from 0.25 to 0.5 -> MAYBE TO TWEAK 
+        
+        # this is done to implement always the same initial position
+        random.seed(self.seed)
         position = [[random.randrange(0, self.height), random.randrange(0, self.width)] for _ in range (self.size)] #  This is the uniform distribution init -> this should be implemented in the Population class!
         # This is needed to obtain unique positions
         for i in range (self.size):
             while position.count(position[i]) > 1:
                 position[i] = [random.randrange(0, self.height), random.randrange(0, self.width)]
-
-        #social_params = [Params[self.p_distr] + random.uniform(-Params[self.p_distr], Params[self.p_distr]) for _ in range (self.size)] 
+        random.seed(None)
         social_params = [[p + random.uniform(-p, p) for p in Params[self.p_distr]] for _ in range (self.size)]
         normalizing_sum = [sum(sp) for sp in social_params]
         social_params = [[sp/n_s for sp in social_params[i]] for i, n_s in enumerate(normalizing_sum)]
@@ -96,7 +102,6 @@ class initial_condition_handler():
         s = ""
         for k in list(self.init_conds.keys()):
             s += f"{k} : {self.init_conds[k]}\n"
-        s += f"Radius : {self.base_radius}\n"
         s += f"Energy Needed : {self.energy_needed}\n"
         s += f"Extra Energy : {self.extra_energy}\n"
         s += f"Energy Requeste : {self.energy_requested}\n"

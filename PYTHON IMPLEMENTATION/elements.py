@@ -155,6 +155,7 @@ class World():
         self.mean_energy = 0 if self.active == 0 else self.mean_energy/self.active
 
     def update(self):
+
         self.active = 0
         for i in range(self.height):
             for j in range(self.length):
@@ -188,13 +189,10 @@ class World():
                     to_active -= 1
 
         # all the version no regen are the same as the original but whith no regen
-
         if self.active == 0:
             return - 1 # This means all that the world is dead
         self.density = self.active/(self.length*self.height)
         self.compute_mean_energy()
-        self.reset_position()
-        return 0
     
     def __getitem__(self, idx) -> Cell:
         if type(idx) is not list and type(idx) is not tuple:
@@ -341,7 +339,6 @@ class Individual():
             self.energy -= metabolism
             self.age += 1
             self.sample_behavior()
-            return None
     
     def sample_behavior(self):
         self.behavior = "N"
@@ -529,6 +526,7 @@ class Population():
 
     def update(self, world : World):
         world.reset_information()
+        world.reset_position()
         self.born = 0
         for i in range (len(self.__individuals__)):
             # WE RIDEFINE AS FOLLOW : the communication can be altruistic selfish etc etc the action is "always the same"
@@ -586,6 +584,10 @@ class Population():
 
     def alive(self):
         return len(self.__individuals__)
+
+    def get_behaviors(self):
+        return [i.behavior for i in self.__individuals__]
+            
         
 if __name__ == "__main__":
     pass
