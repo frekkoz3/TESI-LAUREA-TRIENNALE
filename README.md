@@ -1,4 +1,4 @@
-#Social IFABaM
+# Social IFABaM
 ---
 This is the official repo of my Bachelor thesis. As soon as possible this read me will be changed with the official paper written in latex. 
 

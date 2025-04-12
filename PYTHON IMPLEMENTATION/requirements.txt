@@ -1,0 +1,4 @@
+matplotlib==3.10.1
+numpy==2.2.4
+pygame==2.6.1
+reportlab==4.3.1

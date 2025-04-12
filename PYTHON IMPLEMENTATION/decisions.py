@@ -174,11 +174,16 @@ class SelfishProcess(DecisionalProcess):
         # Using only the field to communicate seems to lead to difficulty but we have an idea. We must modify only the
         # Minimum amount of information field necessary. It means that he will modify only the field that he does not need
         min_y, min_x, max_y, max_x, communication = super().communicate(individual, population, world)
+        r = individual.radius # the radius is a parameter to tweak guys!
+        pos = individual.position
+        actual_pos = [pos[0]-min_y, pos[1]-min_x] # This is the actual position in the neighbourhood
 
         if self.code == 'F':
 
             communication = [[v.rotate(180) if isinstance(v, Vector) else v for v in c ] for c in communication] # rotation of 180 degrees 
-            
+            v = communication[actual_pos[0]][actual_pos[1]]
+            communication[actual_pos[0]][actual_pos[1]] = v.rotate(180) if isinstance(v, Vector) else v
+            """
             # Now we set to normal the one needed to go to the food
             pos = individual.position
             r = individual.radius
@@ -199,7 +204,7 @@ class SelfishProcess(DecisionalProcess):
                                 if not rotated[y][z]:
                                     communication[y][z] = communication[y][z].rotate(180) if isinstance(communication[y][z], Vector) else communication[y][z]
                                     rotated[y][z] = True
-
+            """
         return min_y, min_x, max_y, max_x, communication
 
     def decision(self, individual, population, world):
