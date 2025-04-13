@@ -10,8 +10,10 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation, PillowWriter
 import numpy as np
 from datetime import datetime
+import seaborn as sns
 import os
 
 def get_current_datetime():
@@ -98,7 +100,7 @@ def time_series_data_analysis(data, time, X_label, Y_label, title, filename, img
 
 class StatsReporter:
 
-    def __init__(self, initial_condition,  n_simulation, file_path = "REPORT/", folder_name_mode = 'Date_Time', time_window = 1):
+    def __init__(self, initial_condition,  n_simulation, file_path = "REPORT/", folder_name_mode = 'Date_Time', time_window = 10):
         
         self.current_time = get_current_datetime()
         if folder_name_mode == 'Date_Time': # Date time name
@@ -139,13 +141,16 @@ class StatsReporter:
             self.mean_population_energy[s].append(population.mean_energy)
             self.mean_world_energy[s].append(world.mean_energy)
             social_mean_param = population.get_behaviors()
-            self.selfish_mean_param[s].append(social_mean_param.count("S"))
-            self.altruism_mean_param[s].append(social_mean_param.count("A"))
-            self.normal_mean_param[s].append(social_mean_param.count("N"))
+
+            n = population.alive() if population.alive() > 0 else 1
+            self.selfish_mean_param[s].append(social_mean_param.count("S")/n)
+            self.altruism_mean_param[s].append(social_mean_param.count("A")/n)
+            self.normal_mean_param[s].append(social_mean_param.count("N")/n)
+
             self.heritage[s].append(population.heritage)
             self.different_heritage[s].append(len(set(population.heritage)))
             self.mean_population_age[s].append(population.mean_age)
-            p = [1 if w_p else 0 for w_p in world.get_position()]
+            p = [[1 if p else 0 for p in w_p] for w_p in world.get_position()]
             self.positions[s].append(p)
     
     def report(self, simulation_number, forced_end = False):
@@ -190,45 +195,65 @@ class StatsReporter:
 
             # POPULATION OVER TIME PLOT
             time_series_data_analysis(self.alive_population, time, "Time", "Population", "Average Population over time", "Pops over time", self.img_path, pdf, max_len)
-
-            """
-            # POPULATION OVER TIME PLOT
-
-            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.alive_population), "Population", "Population over time", filename=self.img_path+"Population over time.png")
-            pdf.add_plot(plot_filename=self.img_path+"Population over time.png")
-            pdf.add_text(f"Mean : {np.mean(np.array(self.alive_population))}", size = 8, spacing = 8)
-            pdf.add_text(f"Variance : {np.var(np.array(self.alive_population))}", size = 8, spacing = 8)
-            pdf.add_text(f"Min : {np.min(np.array(self.alive_population))}", size = 8, spacing = 8)
-            pdf.add_text(f"Max : {np.max(np.array(self.alive_population))}", size = 8, spacing = 8)
-
-            # CELL OVER TIME PLOT
-            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.alive_cell), "Cell", "Cell over time", filename=self.img_path+"Cell over time.png")
-            pdf.add_plot(plot_filename=self.img_path+"Cell over time.png")
             
+            # CELL OVER TIME PLOT
+            time_series_data_analysis(self.alive_cell, time, "Time", "Energy Cells", "Average Energy Cells over time", "EC over time", self.img_path, pdf, max_len)
+
             # MEAN POPULATION ENERGY OVER TIME
-            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_population_energy), "Mean Population Energy", "Mean Population Energy over time", filename=self.img_path+"Mean Population Energy over time.png")
-            pdf.add_plot(plot_filename=self.img_path+"Mean Population Energy over time.png")
-            pdf.add_text(f"Mean : {np.mean(np.array(self.mean_population_energy))}", size = 8, spacing = 8)
-            pdf.add_text(f"Variance : {np.var(np.array(self.mean_population_energy))}", size = 8, spacing = 8)
-
+            time_series_data_analysis(self.mean_population_energy, time, "Time", "Mean Population Energy", "Average Mean Population Energy over time", "AVG Pop Energy over time", self.img_path, pdf, max_len)
+            
             # MEAN POPULATION AGE OVER TIME
-            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_population_age), "Mean Population Age", "Mean Population Age over time", filename=self.img_path+"Mean Population Age over time.png")
-            pdf.add_plot(plot_filename=self.img_path+"Mean Population Age over time.png")
-            pdf.add_text(f"Mean : {np.mean(np.array(self.mean_population_age))}", size = 8, spacing = 8)
-            pdf.add_text(f"Variance : {np.var(np.array(self.mean_population_age))}", size = 8, spacing = 8)
-
+            time_series_data_analysis(self.mean_population_age, time, "Time", "Mean Population Age", "Average Mean Population Age over time", "AVG Pop Age over time", self.img_path, pdf, max_len)
+            
             # MEAN WORLD ENERGY OVER TIME
-            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.mean_world_energy), "Mean World Energy", "Mean World Energy over time", filename=self.img_path+"Mean World Energy over time.png")
-            pdf.add_plot(plot_filename=self.img_path+"Mean World Energy over time.png")
+            time_series_data_analysis(self.mean_world_energy, time, "Time", "Mean World Energy", "Average Mean World Energy over time", "AVG World Energy over time", self.img_path, pdf, max_len)
 
-            # MEAN SOCIAL PARAMETERS OVER TIME
-            parameters_plot(np.linspace(0, self.t, self.t), np.array(self.selfish_mean_param), np.array(self.altruism_mean_param), np.array(self.normal_mean_param), filename=self.img_path+"Mean Social Parameters over time.png")
-            pdf.add_plot(plot_filename=self.img_path+"Mean Social Parameters over time.png")
+            # HERITAGE
+            time_series_data_analysis(self.different_heritage, time, "Time", "Different Heritage", "Average Different Heritage over time", "Heritage over time", self.img_path, pdf, max_len)
+            
+            # SELFHISHNESS
+            time_series_data_analysis(self.selfish_mean_param, time, "Time", "Selfishness", "Average Selfishness over time", "Selfishness over time", self.img_path, pdf, max_len)
 
-            # DIFFERENT HERITAGE COUNT OVER TIME
-            time_serie_plot(np.linspace(0, self.t, self.t), np.array(self.different_heritage), "Different Heritage", "Different Heritage over time", filename=self.img_path+"Different Heritage over time.png")
-            pdf.add_plot(plot_filename=self.img_path+"Different Heritage over time.png")
-            """
+            # ALTRUISM 
+            time_series_data_analysis(self.altruism_mean_param, time, "Time", "Altruism", "Average Altruism over time", "Altruism over time", self.img_path, pdf, max_len)
+
+            # NORMALITY
+            time_series_data_analysis(self.normal_mean_param, time, "Time", "Normality", "Average Normality over time", "Normlaity over time", self.img_path, pdf, max_len)
+
+            # SPATIAL DISTRIBUTION DENSITY
+            a = self.positions
+
+            matrix_shape = (len(a[0][0]), len(a[0][0][0]))
+            for sublist in a:
+                while len(sublist) < max_len:
+                    sublist.append([[0] * matrix_shape[1] for _ in range(matrix_shape[0])])
+            data = np.sum(a, axis = 0, dtype=float)
+            for i, m in enumerate(data):
+                data[i] = data[i]/np.sum(m)
+
+            pdf.add_text("Spatial Distribution Density Heatmap", size = 8, spacing = 8)
+            # 5 POINTS (T = 0, T = 0.25, T = 0.5, T=0.75, T = 1) where T is t/max_len
+            for t in range (5):
+                index = min(int(max_len*(t/4)), max_len-1)
+                fig, ax = plt.subplots(figsize=(10, 5))
+                sns.heatmap(data[index], cbar=True, ax=ax)
+                ax.set_title(f"Time = {t/4}")
+                plt.savefig(self.img_path + f"Spatial Distribution At time {t/4}.png")
+                pdf.add_plot(self.img_path + f"Spatial Distribution At time {t/4}.png")
+                plt.close()
+
+            # GIF 
+            fig, ax = plt.subplots(figsize=(10, 5))
+            sns.heatmap(data[0], cbar=True, ax=ax)
+            ax.set_title("Time = 0")
+            def update(frame):
+                ax.clear()
+                sns.heatmap(data[frame], cbar=False, ax=ax)
+                ax.set_title(f"Time = {frame}")
+            ani = FuncAnimation(fig, update, frames=range(max_len), interval=300)
+            ani.save(self.img_path + "Spatial Distribution Over Time.gif", writer=PillowWriter(fps=3))
+            plt.close()
+
             # META DATA
             pdf.add_text(text="Author : Francesco Bredariol", size = 7, spacing = 7)
             pdf.add_text(text="Year : 2024/2025", size = 7, spacing = 7)
@@ -241,6 +266,10 @@ class StatsReporter:
 
 if __name__ == "__main__":
     pass
+
+    
+
+
 
 
 

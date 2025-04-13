@@ -15,7 +15,8 @@ if __name__ == "__main__":
     data = inital_condition_GUI()
     visualize = True
     report = True
+    t_max = 1000
     if visualize:
-        play(data, report = report)
+        play(data, report = report, t_max=t_max)
     else:
         play_off_graphics(data, report = report)

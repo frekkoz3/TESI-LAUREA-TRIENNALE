@@ -1,3 +1,1 @@
--> IMPLEMENT THE REPORTS CORRECTLY (now it is only implemented the possibility of multiple simulation)
--> IMPLEMENT THE SPATIAL DISTRIBUTION REPORT
 -> IMPLEMENT THE JUMP MECHANIC
