@@ -53,20 +53,22 @@ class PDFReport:
         """Save the final PDF"""
         self.canvas.save()
 
-def time_serie_plot(x, y, label, title, filename, figsize =(10, 5), evidence_mean = True):
+def time_serie_plot(time, mean, median, q1, q3, X_label, Y_Label, title, img_path, filename, figsize =(10, 5), evidence_mean = True):
 
     plt.figure(figsize = figsize)
-    plt.plot(x, y, label=label, color='blue')
+    plt.plot(time, mean, label="mean", color='blue')
+    plt.plot(time, median, label="median", color="orange", linestyle="--")
     if evidence_mean:
-        mean_value = np.mean(y)
-        plt.axhline(y=mean_value, color='red', linestyle='--', label=f'Mean: {mean_value:.2f}')
+        mean_value = np.mean(mean)
+        plt.axhline(y=mean_value, color='red', linestyle='--', label=f'Mean of mean: {mean_value:.2f}')
+    plt.fill_between(time, q1, q3, color = "blue", alpha = 0.2, label='Interquartile Range (Q1–Q3)')
     
-    plt.xlabel('Time')
-    plt.ylabel(label)
+    plt.xlabel(X_label)
+    plt.ylabel(Y_Label)
     plt.title(title)
     plt.legend()
 
-    plt.savefig(filename)  # Save plot as an image
+    plt.savefig(img_path+filename+".png")  # Save plot as an image
     plt.close()  # Close the figure to free memory
 
 def parameters_plot(x, s, a, n, filename, figsize =(10, 5)):
@@ -83,9 +85,20 @@ def parameters_plot(x, s, a, n, filename, figsize =(10, 5)):
     plt.savefig(filename)  # Save plot as an image
     plt.close()  # Close the figure to free memory
 
+def time_series_data_analysis(data, time, X_label, Y_label, title, filename, img_path, pdf, max_len):
+                data = np.array([row + [0]*(max_len -len(row)) for row in data])
+                means = np.mean(data, axis = 0)
+                medians = np.median(data, axis = 0)
+                q1 = np.quantile(data, q = 0.25, axis = 0)
+                q3 = np.quantile(data, q = 0.75, axis = 0)
+                time_serie_plot(time, means, medians, q1, q3, X_label, Y_label, title, img_path, filename)
+                pdf.add_plot(plot_filename= img_path+filename+".png")
+                pdf.add_text(f"Mean : {np.mean(means)}", size = 8, spacing = 8)
+                pdf.add_text(f"Variance : {np.var(means)}", size = 8, spacing = 8)
+
 class StatsReporter:
 
-    def __init__(self, initial_condition,  n_simulation, file_path = "REPORT/", folder_name_mode = 'Date_Time', time_window = 100):
+    def __init__(self, initial_condition,  n_simulation, file_path = "REPORT/", folder_name_mode = 'Date_Time', time_window = 1):
         
         self.current_time = get_current_datetime()
         if folder_name_mode == 'Date_Time': # Date time name
@@ -142,6 +155,11 @@ class StatsReporter:
         
         if simulation_number == (self.n_simulation - 1) or forced_end:
 
+            # -> needed to PAD (with 0) DATA IN ORDER TO OBTAIN HOMOGENEOUS MATRIX
+            max_len = max(self.windows_horizons)
+            # ACTUAL TIME
+            time = np.linspace(0, max_len - 1, max_len)
+
             pdf = PDFReport(self.file_path)
             # DATE TIME
             pdf.add_text(text=f"Test done {self.current_time.split(" ")[0]} at {self.current_time.split(" ")[1]}", size = 10)
@@ -157,11 +175,21 @@ class StatsReporter:
             # HORIZONS OF ALL SIMULATIONS
 
             ts = np.array(self.horizons)
+            plt.figure(figsize = (10, 5))
+            plt.scatter([i for i in range (len(ts))], ts, label="Horizons", color='blue')
+            plt.xlabel("Simulations")
+            plt.ylabel("Horizons")
+            plt.title("Horizons over simulations")
+            plt.legend()
+            plt.savefig(self.img_path + "Horizons.png")  # Save plot as an image
+            plt.close()  # Close the figure to free memory
 
-            time_serie_plot(np.linspace(0, self.n_simulation - 1, self.n_simulation), ts, "Simulations", "Horizons over simulations", filename=self.img_path+"Horizons.png")
             pdf.add_plot(plot_filename=self.img_path+"Horizons.png")
             pdf.add_text(f"Mean : {np.mean(ts)}", size = 8, spacing = 8)
             pdf.add_text(f"Variance : {np.var(ts)}", size = 8, spacing = 8)
+
+            # POPULATION OVER TIME PLOT
+            time_series_data_analysis(self.alive_population, time, "Time", "Population", "Average Population over time", "Pops over time", self.img_path, pdf, max_len)
 
             """
             # POPULATION OVER TIME PLOT
@@ -213,4 +241,7 @@ class StatsReporter:
 
 if __name__ == "__main__":
     pass
+
+
+
 
