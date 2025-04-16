@@ -9,7 +9,6 @@ import tkinter as tk
 from tkinter import Scale
 from tkinter import filedialog
 from tkinter import Label
-from tkinter import Entry
 from tkinter import StringVar
 from tkinter import OptionMenu
 from tkinter import Spinbox

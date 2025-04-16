@@ -13,10 +13,10 @@ from off_graphics_simulation import *
 
 if __name__ == "__main__":
     data = inital_condition_GUI()
-    visualize = True
+    visualize = False
     report = True
     t_max = 1000
     if visualize:
         play(data, report = report, t_max=t_max)
     else:
-        play_off_graphics(data, report = report)
+        play_off_graphics(data, report = report, t_max=t_max)

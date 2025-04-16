@@ -8,7 +8,6 @@
 from abc import ABC
 from action_handler import *
 import random
-import math
 from vector import *
 
 debug = False
