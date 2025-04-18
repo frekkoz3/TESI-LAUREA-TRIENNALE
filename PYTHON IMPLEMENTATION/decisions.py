@@ -9,7 +9,7 @@ from abc import ABC
 from action_handler import *
 import random
 from vector import *
-
+import numpy as np
 debug = False
 
 POSSIBILITIES = ['Move_N', 'Move_W', 'Move_S', 'Move_E', 'Rest', 'Eat_1', 'Reproduce']
@@ -117,6 +117,19 @@ class DecisionalProcess(ABC):
                 if a in available_action:
                     return a
             return "Rest"
+    
+        def random_jump(pos, rad, max_h, max_l):
+            # this parameters are tweaked to have a beta with mode of r and average of r
+            a = 4.0
+            b = 8.0
+            # this is just to obtain all the possible direction
+            dy_sign = -1 if random.randint(0, 1) == 0 else 1
+            dx_sign = -1 if random.randint(0, 1) == 0 else 1
+            dy = int(np.random.beta(a, b)*3*rad)
+            dx = int(np.random.beta(a, b)*3*rad)
+            ny = min(max(0, pos[0] + dy_sign*dy), max_h - 1)
+            nx = min(max(0, pos[1] + dx_sign*dx), max_l - 1)
+            return f"Jump_{ny}_{nx}"
         
         def basic_logic(available_action, direction_vector, act, rotate = False):
             if direction_vector == (0, 0):
@@ -163,6 +176,10 @@ class DecisionalProcess(ABC):
         if act.split("_")[0] == "Move":
             if random.uniform(0, 1) < 0.01:
                 act = random_movement(available_action)
+        
+        # WITH PROBABILITY 5% WE RANDOMLY JUMP
+        if random.uniform(0, 1) < 0.05:
+            act = random_jump(pos, r, world.height, world.length)
 
         return act 
 

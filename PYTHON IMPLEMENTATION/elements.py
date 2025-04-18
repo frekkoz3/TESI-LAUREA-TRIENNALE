@@ -322,10 +322,19 @@ class Individual():
         self.sample_behavior()
 
     def update(self, costs):
+        Am = self.max_age
+        Em = self.max_energy
+        k = 0.02 # PARAMETERS THAT CAN BE TWEAK
+        metabolism = self.age*(-(4*k*Em/(Am*Am))*self.age + (4*k*Em/Am)) # x(ax + b)
+        self.energy -= metabolism
+        self.age += 1
+        self.sample_behavior()
         if self.energy <= 0 or self.age >= self.max_age:
             self.energy = 0
             self.dead = True
             return self
+        elif self.last_action.split("_")[0] == "Jump":
+            pass # No cost for the random jump (i mean, come on, poor boy)
         else:
             self.energy -= costs[self.last_action] # cost of the last action taken
             """
@@ -337,13 +346,6 @@ class Individual():
                     a = -(4*k*Em)/(Am^2), b = (4*k*Em)/(Am), c = 0
 
             """
-            Am = self.max_age
-            Em = self.max_energy
-            k = 0.02 # PARAMETERS THAT CAN BE TWEAK
-            metabolism = self.age*(-(4*k*Em/(Am*Am))*self.age + (4*k*Em/Am)) # x(ax + b)
-            self.energy -= metabolism
-            self.age += 1
-            self.sample_behavior()
     
     def sample_behavior(self):
         self.behavior = "N"
@@ -401,6 +403,10 @@ class Individual():
             self.reproduce(pop)
         elif split_decision[0] == 'Pollute':
             self.pollute()
+        elif split_decision[0] == 'Jump':
+            angle = int(split_decision[1])
+            length = int(split_decision[2])
+            self.jump(angle, length) # it is already a legit move
         self.last_action = actual_decision
                 
     def move(self, direction = 'N'):
@@ -420,7 +426,7 @@ class Individual():
         pass
 
     def eat(self, request, cell : Cell):
-        self.energy = min(self.energy + cell.release_energy(request), self.max_energy)
+        self.energy = min(self.energy + cell.release_energy(request), self.max_energy)                
 
     def reproduce(self, pop):
         # To reproduce we are guaranteed to have 4 free cells in our neighbourhood
@@ -445,7 +451,7 @@ class Individual():
         # BIRTH POSITION
         directions = { 1 : [0, 1], 2 : [0, -1], 3 : [-1, 0], 4 : [1, 0] }
         r_dir = random.randint(1, 4)
-        son_position = [self.position[0] + directions[r_dir][0] , self.position[1] + directions[r_dir][1]] # weshould check if this is valid
+        son_position = [self.position[0] + directions[r_dir][0] , self.position[1] + directions[r_dir][1]] # it is assicurate to be a legit position
         # BIRTH ENERGY
         son_energy = int(self.energy*0.25)
         # SON IDX
@@ -460,6 +466,9 @@ class Individual():
         son = Individual(max_age=son_max_age, birth_energy=son_energy, max_energy=son_max_energy, position=son_position, social_param=son_social_param, radius=son_radius, maturity=son_maturity, energy_needed=son_energy_needed, extra_energy=son_extra_energy, mutation_rate=son_mutation_rate, idx = son_idx, energy_requested = son_energy_requested) # We should implement a lot of think here, don't worry for now
         self.energy = int(self.energy*0.75) # This parameter is to tweak
         pop.birth(son)
+    
+    def jump(self, y_n, x_n):
+        self.position = [y_n, x_n] # it is assicurate to be a legit position
 
     def pollute(self):
         pass
