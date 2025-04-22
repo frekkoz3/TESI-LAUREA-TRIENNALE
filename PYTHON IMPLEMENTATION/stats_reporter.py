@@ -160,6 +160,8 @@ class StatsReporter:
         
         if simulation_number == (self.n_simulation - 1) or forced_end:
 
+            print("Processing all the stats. Please wait a few moments...")
+
             # -> needed to PAD (with 0) DATA IN ORDER TO OBTAIN HOMOGENEOUS MATRIX
             max_len = max(self.windows_horizons)
             # ACTUAL TIME

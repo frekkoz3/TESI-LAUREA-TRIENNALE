@@ -134,6 +134,9 @@ def play(data : dict, verbose = False, report = True, t_max = 10000):
         reporter = StatsReporter(initial_condition=init_cond, n_simulation=n_simulations) # We use the default path of the class    
 
     for actual_simulation in range(n_simulations):
+
+        print(f"Simulation number {actual_simulation}")
+        
         # Initialize PyGame
         pygame.init()
         pop, world, init_cond = initial_condition_handler(data).begin()

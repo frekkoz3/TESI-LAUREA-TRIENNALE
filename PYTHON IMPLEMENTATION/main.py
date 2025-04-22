@@ -14,8 +14,8 @@ from off_graphics_simulation import *
 if __name__ == "__main__":
     data = inital_condition_GUI()
     visualize = True
-    report = False
-    t_max = 1000
+    report = True
+    t_max = 5000
     if visualize:
         play(data, report = report, t_max=t_max)
     else:
