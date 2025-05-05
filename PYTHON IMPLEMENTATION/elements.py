@@ -404,9 +404,9 @@ class Individual():
         elif split_decision[0] == 'Pollute':
             self.pollute()
         elif split_decision[0] == 'Jump':
-            angle = int(split_decision[1])
-            length = int(split_decision[2])
-            self.jump(angle, length) # it is already a legit move
+            x_n = int(split_decision[1])
+            y_n = int(split_decision[2])
+            self.jump(y_n, x_n) # it is already a legit move
         self.last_action = actual_decision
                 
     def move(self, direction = 'N'):
