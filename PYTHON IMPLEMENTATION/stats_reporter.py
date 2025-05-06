@@ -37,7 +37,7 @@ class PDFReport:
         self.y_position -= spacing  # Move cursor down for next element
 
     def add_plot(self, plot_filename="plot.png", width=400, height=250, spacing=30):
-        """Generate a plot using a function, save it, and insert it into the PDF"""
+        """Given a plot image insert it into the PDF"""
         if self.y_position - height < 50:  # Check if the plot fits
             self.new_page()
 
@@ -55,7 +55,7 @@ class PDFReport:
         """Save the final PDF"""
         self.canvas.save()
 
-def time_serie_plot(time, mean, median, q1, q3, X_label, Y_Label, title, img_path, filename, figsize =(10, 5), evidence_mean = True):
+def time_serie_plot(time, mean, median, q1, q3, X_label, Y_label, title, img_path, filename, figsize =(10, 5), evidence_mean = True):
 
     plt.figure(figsize = figsize)
     plt.plot(time, mean, label="mean", color='blue')
@@ -66,12 +66,26 @@ def time_serie_plot(time, mean, median, q1, q3, X_label, Y_Label, title, img_pat
     plt.fill_between(time, q1, q3, color = "blue", alpha = 0.2, label='Interquartile Range (Q1–Q3)')
     
     plt.xlabel(X_label)
-    plt.ylabel(Y_Label)
+    plt.ylabel(Y_label)
     plt.title(title)
     plt.legend()
 
-    plt.savefig(img_path+filename+".png")  # Save plot as an image
-    plt.close()  # Close the figure to free memory
+    plt.savefig(img_path+filename+".png")
+    plt.close()
+
+def single_simulation_plot(time, data, X_label, Y_label, title, img_path, filename, figsize =(10, 5), evidence_mean = True):
+    plt.figure(figsize = figsize)
+    plt.plot(time, data, label="mean", color='blue')
+    if evidence_mean:
+        mean_value = np.mean(data)
+        plt.axhline(y=mean_value, color='red', linestyle='--', label=f'Mean of mean: {mean_value:.2f}')
+    
+    plt.xlabel(X_label)
+    plt.ylabel(Y_label)
+    plt.title(title)
+    plt.legend()
+    plt.savefig(img_path + filename +".png") 
+    plt.close()
 
 def parameters_plot(x, s, a, n, filename, figsize =(10, 5)):
 
@@ -87,13 +101,18 @@ def parameters_plot(x, s, a, n, filename, figsize =(10, 5)):
     plt.savefig(filename)  # Save plot as an image
     plt.close()  # Close the figure to free memory
 
-def time_series_data_analysis(data, time, X_label, Y_label, title, filename, img_path, pdf, max_len):
-                data = np.array([row + [0]*(max_len -len(row)) for row in data])
-                means = np.mean(data, axis = 0)
-                medians = np.median(data, axis = 0)
-                q1 = np.quantile(data, q = 0.25, axis = 0)
-                q3 = np.quantile(data, q = 0.75, axis = 0)
-                time_serie_plot(time, means, medians, q1, q3, X_label, Y_label, title, img_path, filename)
+def time_series_data_analysis(data, time, X_label, Y_label, title, filename, img_path, pdf, max_len, single_simulation = False):
+                if single_simulation:
+                    data = np.array(data)
+                    single_simulation_plot(time, data, X_label, Y_label, title, img_path, filename)
+                    means = np.mean(data)
+                else:
+                    data = np.array([row + [0]*(max_len -len(row)) for row in data])
+                    means = np.mean(data, axis = 0)
+                    medians = np.median(data, axis = 0)
+                    q1 = np.quantile(data, q = 0.25, axis = 0)
+                    q3 = np.quantile(data, q = 0.75, axis = 0)
+                    time_serie_plot(time, means, medians, q1, q3, X_label, Y_label, title, img_path, filename)
                 pdf.add_plot(plot_filename= img_path+filename+".png")
                 pdf.add_text(f"Mean : {np.mean(means)}", size = 8, spacing = 8)
                 pdf.add_text(f"Variance : {np.var(means)}", size = 8, spacing = 8)
@@ -107,6 +126,8 @@ class StatsReporter:
             self.folder_name = self.current_time
         else: # folder_name_mode == 'Console': # Console input
             self.folder_name = input("Insert the name for the folder where to save the report: ")
+        
+        self.root = file_path + self.folder_name
 
         # Create the folder (if it doesn't exist)
         os.makedirs(file_path + self.folder_name, exist_ok=True)
@@ -157,7 +178,44 @@ class StatsReporter:
 
         self.horizons[simulation_number] = self.t
         self.windows_horizons[simulation_number] = self.t//self.time_window
-        
+
+        # Create the folder for the single simulation
+        folder = f"{self.root}/simulation {simulation_number}"
+        os.makedirs(folder, exist_ok=True)
+
+        print("Processing stats for the current simulation. Please wait a few moments...")
+
+        time = np.linspace(0, self.windows_horizons[simulation_number]-1, self.windows_horizons[simulation_number])
+
+        pdf = PDFReport(folder+f"/stats report {simulation_number}.pdf")
+
+        pdf.add_text(text=f"Simulation number {simulation_number}", size = 10)
+        pdf.add_text(text=f"Test done {self.current_time.split(" ")[0]} at {self.current_time.split(" ")[1]}", size = 10)
+        pdf.add_text(text=f"Horizon reached {self.t}", size = 10)
+
+        time_series_data_analysis(self.alive_population[simulation_number], time, "Time", "Population", "Population over time", f"Population Over Time {simulation_number}", folder + "/", pdf, time, single_simulation=True)
+        time_series_data_analysis(self.alive_cell[simulation_number], time, "Time", "Cells", "Cells over time", f"Cell Over Time {simulation_number}", folder + "/", pdf, time, single_simulation=True)
+        time_series_data_analysis(self.mean_population_energy[simulation_number], time, "Time", "Mean Population Energy", "Mean Population Energy Over Time", f"Mean Population Energy Over Time {simulation_number}", folder + "/", pdf, time, single_simulation=True)
+        time_series_data_analysis(self.mean_population_age[simulation_number], time, "Time", "Mean Population Age", "Mean Population Age Over Time", f"Mean Population Age Over Time {simulation_number}", folder + "/", pdf, time, single_simulation=True)
+        time_series_data_analysis(self.mean_world_energy[simulation_number], time, "Time", "Mean World Energy", "Mean World Energy over time", f"World Energy over time {simulation_number}", folder + "/", pdf, time, single_simulation=True)
+        time_series_data_analysis(self.different_heritage[simulation_number], time, "Time", "Different Heritage", "Different Heritage over time", f"Heritage over time {simulation_number}", folder + "/", pdf, time, single_simulation=True)
+        parameters_plot(time, self.selfish_mean_param[simulation_number], self.altruism_mean_param[simulation_number], self.normal_mean_param[simulation_number], f"{folder}/Social Parameters Over Time {simulation_number}.png")
+        pdf.add_plot(f"{folder}/Social Parameters Over Time {simulation_number}.png")
+
+        data = self.positions[simulation_number]
+
+        for t in range (5):
+            index = min(int(self.t//self.time_window*(t/4)), self.t//self.time_window-1)
+            fig, ax = plt.subplots(figsize=(10, 5))
+            sns.heatmap(data[index], cbar=True, ax=ax)
+            ax.set_title(f"Time = {t/4}")
+            plt.savefig(folder + "/" + f"Spatial Distribution At time {t/4} _ {simulation_number}.png")
+            pdf.add_plot(folder + "/" + f"Spatial Distribution At time {t/4} _ {simulation_number}.png")
+            plt.close()
+
+        pdf.save_pdf()
+        print(f"PDF for the simulation number {simulation_number} is ready and readable at {folder}")
+
         if simulation_number == (self.n_simulation - 1) or forced_end:
 
             print("Processing all the stats. Please wait a few moments...")
