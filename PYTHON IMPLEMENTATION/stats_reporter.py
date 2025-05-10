@@ -204,8 +204,13 @@ class StatsReporter:
 
         data = self.positions[simulation_number]
 
+        indexes = [0]
+        for t in [0.25, 0.5, 0.75, 1]:
+            indexes.append(min(int(self.t//self.time_window*(t)), self.t//self.time_window-1))
+
+
         for t in range (5):
-            index = min(int(self.t//self.time_window*(t/4)), self.t//self.time_window-1)
+            index = indexes[t]
             fig, ax = plt.subplots(figsize=(10, 5))
             sns.heatmap(data[index], cbar=True, ax=ax)
             ax.set_title(f"Time = {t/4}")
@@ -293,8 +298,13 @@ class StatsReporter:
 
             pdf.add_text("Spatial Distribution Density Heatmap", size = 8, spacing = 8)
             # 5 POINTS (T = 0, T = 0.25, T = 0.5, T=0.75, T = 1) where T is t/max_len
+
+            indexes = [0]
+        for t in [0.25, 0.5, 0.75, 1]:
+            indexes.append(min(int(max_len*t), max_len - 1))
+
             for t in range (5):
-                index = min(int(max_len*(t/4)), max_len-1)
+                index = indexes[t]
                 fig, ax = plt.subplots(figsize=(10, 5))
                 sns.heatmap(data[index], cbar=True, ax=ax)
                 ax.set_title(f"Time = {t/4}")
