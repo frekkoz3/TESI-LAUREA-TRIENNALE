@@ -72,15 +72,37 @@ class initial_condition_handler():
         
         # this is done to implement always the same initial position
         random.seed(self.seed)
-        position = [[random.randrange(0, self.height), random.randrange(0, self.width)] for _ in range (self.size)] #  This is the uniform distribution init -> this should be implemented in the Population class!
-        # This is needed to obtain unique positions
-        for i in range (self.size):
-            while position.count(position[i]) > 1:
-                position[i] = [random.randrange(0, self.height), random.randrange(0, self.width)]
+
+        mode = "behaviors_corners" # THIS SHOULD NOT BE HERE!!!
+        if mode == "first_quad":
+            position = [[random.randrange(0, self.height//2), random.randrange(0, self.width//2)] for _ in range (self.size)] #  This is the first quadrant distribution init -> this should be implemented in the Population class!
+            for i in range (self.size):
+                while position.count(position[i]) > 1:
+                    position[i] = [random.randrange(0, self.height//2), random.randrange(0, self.width//2)]
+
+        elif mode == "behaviors_corners":
+            position = []
+            borders = [[0, self.height//4, 0, self.width//4], [int(0.75*self.height), self.height, 0, self.width//4], [0, self.height//4, int(0.75*self.width), self.width]]
+            social_params = []
+            beh = {0 : Params["Normal"], 1 : Params["Altruistic"], 2 : Params["Selfish"]}
+            for i in range (self.size):
+                position.append([random.randrange(borders[i%3][0], borders[i%3][1]), random.randrange(borders[i%3][2], borders[i%3][3])])
+                social_params.append(beh[i%3])
+
+        else:
+            position = [[random.randrange(0, self.height), random.randrange(0, self.width)] for _ in range (self.size)] #  This is the uniform distribution init -> this should be implemented in the Population class!
+            # This is needed to obtain unique positions
+            for i in range (self.size):
+                while position.count(position[i]) > 1:
+                    position[i] = [random.randrange(0, self.height), random.randrange(0, self.width)]
+
         random.seed(None)
-        social_params = [[p + random.uniform(-p, p) for p in Params[self.p_distr]] for _ in range (self.size)]
-        normalizing_sum = [sum(sp) for sp in social_params]
-        social_params = [[sp/n_s for sp in social_params[i]] for i, n_s in enumerate(normalizing_sum)]
+
+        if mode != "behaviors_corners":
+            social_params = [[p + random.uniform(-p, p) for p in Params[self.p_distr]] for _ in range (self.size)]
+            normalizing_sum = [sum(sp) for sp in social_params]
+            social_params = [[sp/n_s for sp in social_params[i]] for i, n_s in enumerate(normalizing_sum)]
+            
         population = Population([Individual(max_age = max_ages[i], birth_energy = birth_energies[i], max_energy = max_energies[i], social_param = social_params[i], position = position[i], radius = self.base_radius, maturity = maturities[i], energy_needed = self.energy_needed, extra_energy = self.extra_energy, mutation_rate = self.mutation_rate, idx=i, energy_requested=self.energy_requested) for i in range (self.size)])
         return population
     

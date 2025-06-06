@@ -303,14 +303,14 @@ class StatsReporter:
         for t in [0.25, 0.5, 0.75, 1]:
             indexes.append(min(int(max_len*t), max_len - 1))
 
-            for t in range (5):
-                index = indexes[t]
-                fig, ax = plt.subplots(figsize=(10, 5))
-                sns.heatmap(data[index], cbar=True, ax=ax)
-                ax.set_title(f"Time = {t/4}")
-                plt.savefig(self.img_path + f"Spatial Distribution At time {t/4}.png")
-                pdf.add_plot(self.img_path + f"Spatial Distribution At time {t/4}.png")
-                plt.close()
+        for tau in range (5):
+            index = indexes[tau]
+            fig, ax = plt.subplots(figsize=(10, 5))
+            sns.heatmap(data[index], cbar=True, ax=ax)
+            ax.set_title(f"Time = {tau/4}")
+            plt.savefig(self.img_path + f"Spatial Distribution At time {tau/4}.png")
+            pdf.add_plot(self.img_path + f"Spatial Distribution At time {tau/4}.png")
+            plt.close()
 
             # GIF 
             fig, ax = plt.subplots(figsize=(10, 5))
@@ -329,8 +329,8 @@ class StatsReporter:
             pdf.add_text(text="Year : 2024/2025", size = 7, spacing = 7)
             pdf.add_text(text="This Project is done for the academic purpose of implementing the practical part of the Degree Thesis in Artificial Intelligence and Data Analytics.", size = 7, spacing = 7)
             
-            pdf.save_pdf()
-            print(f"Pdfcreated succesfully. You can find it at {self.file_path}")
+        pdf.save_pdf()
+        print(f"Pdfcreated succesfully. You can find it at {self.file_path}")
 
         self.t = 0
 

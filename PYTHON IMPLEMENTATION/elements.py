@@ -128,6 +128,18 @@ class World():
                 if self.__cells__[idx_1][idx_2].energy == 0:
                     self.__cells__[idx_1][idx_2].charge_energy(self.cell_energy)
                     to_active -= 1
+
+        if self.distribution == "4 Corners" or self.distribution == "4 Corners no regen":
+            to_active = self.initially_alive
+            borders = [[0, self.height//4, 0, self.length//4], [3*self.height//4, self.height, 0, self.length//4], [0, self.height//4, 3*self.length//4, self.length], [3*self.height//4, self.height, 3*self.length//4, self.length]]
+            while to_active > 0:
+                k = random.randint(0, 3)
+                b = borders[k]
+                idx_1 = random.randint(b[0], b[1]-1)
+                idx_2 = random.randint(b[2], b[3]-1)
+                if self.__cells__[idx_1][idx_2].energy == 0:
+                    self.__cells__[idx_1][idx_2].charge_energy(self.cell_energy)
+                    to_active -= 1
             
         if self.distribution == "4 Islands" or self.distribution == "4 Islands no regen":
             
@@ -176,6 +188,19 @@ class World():
                 if self.__cells__[idx_1][idx_2].energy == 0:
                     self.__cells__[idx_1][idx_2].charge_energy(self.cell_energy)
                     to_active -= 1
+        
+        if self.distribution == "4 Corners":
+            to_active = self.initially_alive - self.active
+            borders = [[0, self.height//4, 0, self.length//4], [3*self.height//4, self.height, 0, self.length//4], [0, self.height//4, 3*self.length//4, self.length], [self.height//4, 3*self.height//4, 3*self.length//4, self.length]]
+            while to_active > 0:
+                k = random.randint(0, 3)
+                b = borders[k]
+                idx_1 = random.randint(b[0], b[1]-1)
+                idx_2 = random.randint(b[2], b[3]-1)
+                if self.__cells__[idx_1][idx_2].energy == 0:
+                    self.__cells__[idx_1][idx_2].charge_energy(self.cell_energy)
+                    to_active -= 1
+
         if self.distribution == "4 Islands":
             to_active = self.initially_alive - self.active
             i = random.randrange(0, 4) # if not he prioritize the first quadrant
