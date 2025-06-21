@@ -70,7 +70,7 @@ def inital_condition_GUI():
                 "I_Energy" : ["Insert", "Avg Maximum Energy"], 
                 "I_Age" : ["Insert", "Avg Maximum Age"], 
                 "I_Maturity" : ["Insert", "Avg Maturity Age"],
-                "I_Distr" : ["Menu", ["Uniform"]],
+                "I_Distr" : ["Menu", ["Uniform", "Behaviors Corners", "First Quad", "Trap Inner Altruistic", "Trap Inner Selfish"]],
                 "Radius" : ["Scale", 1, 10],
                 "WORLD SETTINGS" : ["Label"],
                 "Active" : ["Scale", 1, 100], 

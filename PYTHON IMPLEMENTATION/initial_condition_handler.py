@@ -73,23 +73,61 @@ class initial_condition_handler():
         # this is done to implement always the same initial position
         random.seed(self.seed)
 
-        mode = "behaviors_corners" # THIS SHOULD NOT BE HERE!!!
-        if mode == "first_quad":
+        # WE ARE HANDLING HERE THE POPULATION INIT, BUT IT COULD NOT BE THE BEST WAY TO DO IT.
+
+        if self.i_distr == "First Quad":
             position = [[random.randrange(0, self.height//2), random.randrange(0, self.width//2)] for _ in range (self.size)] #  This is the first quadrant distribution init -> this should be implemented in the Population class!
             for i in range (self.size):
                 while position.count(position[i]) > 1:
                     position[i] = [random.randrange(0, self.height//2), random.randrange(0, self.width//2)]
 
-        elif mode == "behaviors_corners":
+        elif self.i_distr == "Behaviors Corners":
             position = []
-            borders = [[0, self.height//4, 0, self.width//4], [int(0.75*self.height), self.height, 0, self.width//4], [0, self.height//4, int(0.75*self.width), self.width]]
+            borders = [[0, int(0.25*self.height), 0, int(0.25*self.width)], [int(0.75*self.height), self.height, 0, int(0.25*self.width)], [0, int(0.25*self.height), int(0.75*self.width), self.width]]
             social_params = []
-            beh = {0 : Params["Normal"], 1 : Params["Altruistic"], 2 : Params["Selfish"]}
+            behaviors = {0 : Params["Normal"], 1 : Params["Altruistic"], 2 : Params["Selfish"]}
             for i in range (self.size):
-                position.append([random.randrange(borders[i%3][0], borders[i%3][1]), random.randrange(borders[i%3][2], borders[i%3][3])])
-                social_params.append(beh[i%3])
+                pos = [random.randrange(borders[i%3][0], borders[i%3][1]), random.randrange(borders[i%3][2], borders[i%3][3])]
+                while pos in position:
+                    pos = [random.randrange(borders[i%3][0], borders[i%3][1]), random.randrange(borders[i%3][2], borders[i%3][3])]
+                position.append(pos)
+                social_params.append(behaviors[i%3])
 
-        else:
+        elif self.i_distr == "Trap Inner Selfish":
+            position = []
+            social_params = []
+            borders = [[0, int(0.5*self.height), 0, int(0.5*self.width)], [0, int(0.32*self.height), 0, int(0.32*self.width)]]
+            for i in range(0, self.size//2): # OUTSIDE
+                pos = [random.randrange(borders[0][0], borders[0][1]) + int(0.25*self.height), random.randrange(borders[0][2], borders[0][3]) + int(0.25*self.width)]
+                while pos in position or (pos[0] > (borders[1][0] + int(0.34*self.height)) and pos[0] <= (borders[1][1] + int(0.34*self.height)) and pos[1] > (borders[1][2] + int(0.34*self.width)) and pos[1] <= (borders[1][3] + int(0.34*self.width))): # It must be sampled outside the inner box
+                    pos = [random.randrange(borders[0][0], borders[0][1]) + int(0.25*self.height), random.randrange(borders[0][2], borders[0][3]) + int(0.25*self.width)]
+                position.append(pos)
+                social_params.append(Params["Altruistic"])
+            for i in range(self.size//2, self.size): # INSIDE
+                pos = [random.randrange(borders[1][0], borders[1][1]) + int(0.34*self.height), random.randrange(borders[1][2], borders[1][3]) + int(0.34*self.width)]
+                while pos in position: # It must be not already sampled
+                    pos = [random.randrange(borders[1][0], borders[1][1]) + int(0.34*self.height), random.randrange(borders[1][2], borders[1][3]) + int(0.34*self.width)]
+                position.append(pos)
+                social_params.append(Params["Selfish"])
+        
+        elif self.i_distr == "Trap Inner Altruistic":
+            position = []
+            social_params = []
+            borders = [[0, int(0.5*self.height), 0, int(0.5*self.width)], [0, int(0.32*self.height), 0, int(0.32*self.width)]]
+            for i in range(0, self.size//2): # OUTSIDE
+                pos = [random.randrange(borders[0][0], borders[0][1]) + int(0.25*self.height), random.randrange(borders[0][2], borders[0][3]) + int(0.25*self.width)]
+                while pos in position or (pos[0] > (borders[1][0] + int(0.34*self.height)) and pos[0] <= (borders[1][1] + int(0.34*self.height)) and pos[1] > (borders[1][2] + int(0.34*self.width)) and pos[1] <= (borders[1][3] + int(0.34*self.width))): # It must be sampled outside the inner box
+                    pos = [random.randrange(borders[0][0], borders[0][1]) + int(0.25*self.height), random.randrange(borders[0][2], borders[0][3]) + int(0.25*self.width)]
+                position.append(pos)
+                social_params.append(Params["Selfish"])
+            for i in range(self.size//2, self.size): # INSIDE
+                pos = [random.randrange(borders[1][0], borders[1][1]) + int(0.34*self.height), random.randrange(borders[1][2], borders[1][3]) + int(0.34*self.width)]
+                while pos in position: # It must be not already sampled
+                    pos = [random.randrange(borders[1][0], borders[1][1]) + int(0.34*self.height), random.randrange(borders[1][2], borders[1][3]) + int(0.34*self.width)]
+                position.append(pos)
+                social_params.append(Params["Altruistic"])
+
+        else:  # For now this is uniform and trap
             position = [[random.randrange(0, self.height), random.randrange(0, self.width)] for _ in range (self.size)] #  This is the uniform distribution init -> this should be implemented in the Population class!
             # This is needed to obtain unique positions
             for i in range (self.size):
@@ -98,7 +136,7 @@ class initial_condition_handler():
 
         random.seed(None)
 
-        if mode != "behaviors_corners":
+        if self.i_distr != "Behaviors Corners" and self.i_distr != "Trap Inner Selfish" and self.i_distr != "Trap Inner Altruistic":
             social_params = [[p + random.uniform(-p, p) for p in Params[self.p_distr]] for _ in range (self.size)]
             normalizing_sum = [sum(sp) for sp in social_params]
             social_params = [[sp/n_s for sp in social_params[i]] for i, n_s in enumerate(normalizing_sum)]

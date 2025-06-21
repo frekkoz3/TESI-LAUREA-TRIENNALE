@@ -131,7 +131,7 @@ class World():
 
         if self.distribution == "4 Corners" or self.distribution == "4 Corners no regen":
             to_active = self.initially_alive
-            borders = [[0, self.height//4, 0, self.length//4], [3*self.height//4, self.height, 0, self.length//4], [0, self.height//4, 3*self.length//4, self.length], [3*self.height//4, self.height, 3*self.length//4, self.length]]
+            borders = [[0, int(0.3*self.height), 0, int(0.3*self.length)], [int(0.7*self.height), self.height, 0, int(0.3*self.length)], [0, int(0.3*self.height), int(0.7*self.length), self.length], [int(0.7*self.height), self.height, int(0.7*self.length), self.length]]
             while to_active > 0:
                 k = random.randint(0, 3)
                 b = borders[k]
@@ -191,7 +191,7 @@ class World():
         
         if self.distribution == "4 Corners":
             to_active = self.initially_alive - self.active
-            borders = [[0, self.height//4, 0, self.length//4], [3*self.height//4, self.height, 0, self.length//4], [0, self.height//4, 3*self.length//4, self.length], [self.height//4, 3*self.height//4, 3*self.length//4, self.length]]
+            borders = [[0, int(0.3*self.height), 0, int(0.3*self.length)], [int(0.7*self.height), self.height, 0, int(0.3*self.length)], [0, int(0.3*self.height), int(0.7*self.length), self.length], [int(0.7*self.height), self.height, int(0.7*self.length), self.length]]
             while to_active > 0:
                 k = random.randint(0, 3)
                 b = borders[k]
@@ -429,8 +429,8 @@ class Individual():
         elif split_decision[0] == 'Pollute':
             self.pollute()
         elif split_decision[0] == 'Jump':
-            x_n = int(split_decision[1])
-            y_n = int(split_decision[2])
+            x_n = int(split_decision[2])
+            y_n = int(split_decision[1])
             self.jump(y_n, x_n) # it is already a legit move
         self.last_action = actual_decision
                 
@@ -510,7 +510,7 @@ class Individual():
         # ALTRUISTIC ONE 
         if self.altruism_param > self.selfishness_param and self.altruism_param > self.normality_param:
             young_color = (51, 255, 51, 255)
-            adult_color = (0, 204, 0, 255)
+            adult_color = (0, 125, 0, 255)
         if self.age < self.maturity:
             return young_color
         return adult_color

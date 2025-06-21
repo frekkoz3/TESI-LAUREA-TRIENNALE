@@ -129,6 +129,13 @@ class DecisionalProcess(ABC):
             dx = int(np.random.beta(a, b)*rad)
             ny = min(max(0, pos[0] + dy_sign*dy), max_h - 1)
             nx = min(max(0, pos[1] + dx_sign*dx), max_l - 1)
+            while (ny < 0 or ny >= max_h or nx < 0 or nx >= max_l):
+                dy_sign = -1 if random.randint(0, 1) == 0 else 1
+                dx_sign = -1 if random.randint(0, 1) == 0 else 1
+                dy = int(np.random.beta(a, b))*rad
+                dx = int(np.random.beta(a, b))*rad
+                ny = min(max(0, pos[0] + dy_sign*dy), max_h - 1)
+                nx = min(max(0, pos[1] + dx_sign*dx), max_l - 1)
             return f"Jump_{ny}_{nx}"
         
         def basic_logic(available_action, direction_vector, act, rotate = False):
@@ -180,7 +187,7 @@ class DecisionalProcess(ABC):
         # WITH PROBABILITY 5% WE RANDOMLY JUMP
         if random.uniform(0, 1) < 0.05:
             act = random_jump(pos, r, world.height, world.length)
-
+        
         return act 
 
 class SelfishProcess(DecisionalProcess):
