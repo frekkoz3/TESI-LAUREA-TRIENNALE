@@ -49,7 +49,7 @@ class Vector():
         return Vector(self.x+v.x, self.y + v.y)
     
     def __str__(self):
-        return f"({format(self.x, ".2f")}, {format(self.y, ".2f")})"
+        return f"({self.x}, {self.y})"
     
     def __eq__(self, v):
         if isinstance(v, tuple):

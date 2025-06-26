@@ -104,7 +104,7 @@ def parameters_plot(x, s, a, n, filename, figsize =(10, 5)):
 def time_series_data_analysis(data, time, X_label, Y_label, title, filename, img_path, pdf, max_len, single_simulation = False):
                 if single_simulation:
                     data = np.array(data)
-                    single_simulation_plot(time, data, X_label, Y_label, title, img_path, filename)
+                    single_simulation_plot(time, data, X_label, Y_label, title, img_path, filename, evidence_mean= False)
                     means = np.mean(data)
                 else:
                     data = np.array([row + [0]*(max_len -len(row)) for row in data])
@@ -150,8 +150,8 @@ class StatsReporter:
         self.file_path = file_path + self.folder_name + "/stats report.pdf"
         self.img_path = file_path + self.folder_name +"/"
         self.positions = [[] for s in range(self.n_simulation)]
-        self.horizons = [0 for s in range(self.n_simulation)]
-        self.windows_horizons = [0 for s in range(self.n_simulation)]
+        self.horizons = np.zeros(self.n_simulation, dtype=int)
+        self.windows_horizons = np.zeros(self.n_simulation, dtype=int)
     
     def update(self,  population : Population, world : World, simulation_number : int):
         self.t += 1
@@ -190,7 +190,7 @@ class StatsReporter:
         pdf = PDFReport(folder+f"/stats report {simulation_number}.pdf")
 
         pdf.add_text(text=f"Simulation number {simulation_number}", size = 10)
-        pdf.add_text(text=f"Test done {self.current_time.split(" ")[0]} at {self.current_time.split(" ")[1]}", size = 10)
+        pdf.add_text(text=f"Test done {self.current_time.split(' ')[0]} at {self.current_time.split(' ')[1]}", size = 10)
         pdf.add_text(text=f"Horizon reached {self.t}", size = 10)
 
         time_series_data_analysis(self.alive_population[simulation_number], time, "Time", "Population", "Population over time", f"Population Over Time {simulation_number}", folder + "/", pdf, time, single_simulation=True)
@@ -202,7 +202,7 @@ class StatsReporter:
         parameters_plot(time, self.selfish_mean_param[simulation_number], self.altruism_mean_param[simulation_number], self.normal_mean_param[simulation_number], f"{folder}/Social Parameters Over Time {simulation_number}.png")
         pdf.add_plot(f"{folder}/Social Parameters Over Time {simulation_number}.png")
 
-        data = self.positions[simulation_number]
+        data = self.positions[simulation_number] # this is transposed
 
         indexes = [0]
         for t in [0.25, 0.5, 0.75, 1]:
@@ -226,13 +226,13 @@ class StatsReporter:
             print("Processing all the stats. Please wait a few moments...")
 
             # -> needed to PAD (with 0) DATA IN ORDER TO OBTAIN HOMOGENEOUS MATRIX
-            max_len = max(self.windows_horizons)
+            max_len = np.max(self.windows_horizons)
             # ACTUAL TIME
             time = np.linspace(0, max_len - 1, max_len)
 
             pdf = PDFReport(self.file_path)
             # DATE TIME
-            pdf.add_text(text=f"Test done {self.current_time.split(" ")[0]} at {self.current_time.split(" ")[1]}", size = 10)
+            pdf.add_text(text=f"Test done {self.current_time.split(' ')[0]} at {self.current_time.split(' ')[1]}", size = 10)
             pdf.add_text(text=f"Number of simulation done : {simulation_number + 1}. The window time of the simulation is {self.time_window}", size = 6)
             if forced_end:
                 pdf.add_text(text=f"!!! THIS SIMULATION HAS BEEN EARLY STOPPED !!!", size = 6)
@@ -244,7 +244,7 @@ class StatsReporter:
 
             # HORIZONS OF ALL SIMULATIONS
 
-            ts = np.array(self.horizons)
+            ts = self.horizons
             plt.figure(figsize = (10, 5))
             plt.scatter([i for i in range (len(ts))], ts, label="Horizons", color='blue')
             plt.xlabel("Simulations")
@@ -300,17 +300,18 @@ class StatsReporter:
             # 5 POINTS (T = 0, T = 0.25, T = 0.5, T=0.75, T = 1) where T is t/max_len
 
             indexes = [0]
-        for t in [0.25, 0.5, 0.75, 1]:
-            indexes.append(min(int(max_len*t), max_len - 1))
 
-        for tau in range (5):
-            index = indexes[tau]
-            fig, ax = plt.subplots(figsize=(10, 5))
-            sns.heatmap(data[index], cbar=True, ax=ax)
-            ax.set_title(f"Time = {tau/4}")
-            plt.savefig(self.img_path + f"Spatial Distribution At time {tau/4}.png")
-            pdf.add_plot(self.img_path + f"Spatial Distribution At time {tau/4}.png")
-            plt.close()
+            for t in [0.25, 0.5, 0.75, 1]:
+                indexes.append(min(int(max_len*t), max_len - 1))
+
+            for tau in range (5):
+                index = indexes[tau]
+                fig, ax = plt.subplots(figsize=(10, 5))
+                sns.heatmap(data[index], cbar=True, ax=ax)
+                ax.set_title(f"Time = {tau/4}")
+                plt.savefig(self.img_path + f"Spatial Distribution At time {tau/4}.png")
+                pdf.add_plot(self.img_path + f"Spatial Distribution At time {tau/4}.png")
+                plt.close()
 
             # GIF 
             fig, ax = plt.subplots(figsize=(10, 5))
@@ -328,9 +329,9 @@ class StatsReporter:
             pdf.add_text(text="Author : Francesco Bredariol", size = 7, spacing = 7)
             pdf.add_text(text="Year : 2024/2025", size = 7, spacing = 7)
             pdf.add_text(text="This Project is done for the academic purpose of implementing the practical part of the Degree Thesis in Artificial Intelligence and Data Analytics.", size = 7, spacing = 7)
-            
-        pdf.save_pdf()
-        print(f"Pdfcreated succesfully. You can find it at {self.file_path}")
+                
+            pdf.save_pdf()
+            print(f"Pdfcreated succesfully. You can find it at {self.file_path}")
 
         self.t = 0
 
