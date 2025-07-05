@@ -213,7 +213,7 @@ class SelfishProcess(DecisionalProcess):
                 pos = individual.position
                 r = individual.radius
                 rotated = [[False for j in range (0, max_x - min_x + 1)] for i in range (0, max_y - min_y + 1)] # We ned this to track what we already rotate back to normal
-                actual_pos = [pos[0] - min_y, pos[1] - min_x]
+                rotated[actual_pos[0]][actual_pos[1]] = True
                 seen = world.get_neighbourhood(pos, r) 
                 for i in range (0, max_y - min_y):
                     for j in range (0,max_x - min_x):
