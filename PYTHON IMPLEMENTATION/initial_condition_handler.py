@@ -81,6 +81,12 @@ class initial_condition_handler():
                 while position.count(position[i]) > 1:
                     position[i] = [random.randrange(0, self.height//2), random.randrange(0, self.width//2)]
 
+        elif self.i_distr == "Central Block":
+            position = [[random.randrange(int(0.34*self.height), int(0.66*self.height)), random.randrange(int(0.34*self.width), int(0.66*self.width))] for _ in range (self.size)] #  This is the first quadrant distribution init -> this should be implemented in the Population class!
+            for i in range (self.size):
+                while position.count(position[i]) > 1:
+                    position[i] = [random.randrange(int(0.34*self.height), int(0.66*self.height)), random.randrange(int(0.34*self.width), int(0.66*self.width))] 
+
         elif self.i_distr == "Behaviors Corners":
             position = []
             borders = [[0, int(0.25*self.height), 0, int(0.25*self.width)], [int(0.75*self.height), self.height, 0, int(0.25*self.width)], [0, int(0.25*self.height), int(0.75*self.width), self.width]]
@@ -127,7 +133,7 @@ class initial_condition_handler():
                 position.append(pos)
                 social_params.append(Params["Altruistic"])
 
-        else:  # For now this is uniform and trap
+        else:  # Uniform
             position = [[random.randrange(0, self.height), random.randrange(0, self.width)] for _ in range (self.size)] #  This is the uniform distribution init -> this should be implemented in the Population class!
             # This is needed to obtain unique positions
             for i in range (self.size):

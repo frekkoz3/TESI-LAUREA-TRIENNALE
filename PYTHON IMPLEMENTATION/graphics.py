@@ -23,7 +23,7 @@ BAR_HEIGHT = 100
 
 BACKGROUND_COLOR = (245,245,220)
 
-FPS = 20
+FPS = 1
 
 def write_report(reporter : StatsReporter, simulation_number : int, forced_end : bool = False):
     reporter.report(simulation_number, forced_end)
@@ -55,7 +55,7 @@ def draw_arrow(screen, start, vector, cell_side, color=(0, 0, 255), arrow_size=3
     pygame.draw.polygon(screen, color, [end, left_wing, right_wing])
 
 # Draw the grid
-def draw_world(screen, grid_world : World, field_visualization = True):
+def draw_world(screen, grid_world : World, field_visualization = False):
     height = grid_world.height
     length = grid_world.length
     side = grid_world.cell_side
