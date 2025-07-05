@@ -55,7 +55,7 @@ def draw_arrow(screen, start, vector, cell_side, color=(0, 0, 255), arrow_size=3
     pygame.draw.polygon(screen, color, [end, left_wing, right_wing])
 
 # Draw the grid
-def draw_world(screen, grid_world : World, field_visualization = False):
+def draw_world(screen, grid_world : World, field_visualization = True):
     height = grid_world.height
     length = grid_world.length
     side = grid_world.cell_side

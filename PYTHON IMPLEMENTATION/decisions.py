@@ -9,8 +9,10 @@ from abc import ABC
 from action_handler import *
 import random
 from vector import *
-import numpy as np
+import numpy as np 
 debug = False
+
+GREEN_LIAR = True
 
 POSSIBILITIES = ['Move_N', 'Move_W', 'Move_S', 'Move_E', 'Rest', 'Eat_1', 'Reproduce']
 
@@ -84,7 +86,6 @@ class DecisionalProcess(ABC):
          2. Rest 
          3. Eat
          4. Reproduce
-         5. Pollute (To think how to implement)
          AN INDIVIDUAL CAN BE YOUNG OR ADULT. THEY HAVE TWO DIFFERENT BEHAVIOUR. 
          THE YOUNGS AIM FOR THE FOOD
          THE ADULTS (are talking) AIM FOR THE REPRODUCTION 
@@ -202,32 +203,33 @@ class SelfishProcess(DecisionalProcess):
         actual_pos = [pos[0]-min_y, pos[1]-min_x] # This is the actual position in the neighbourhood
 
         if self.code == 'F':
-
+            # FULL LIAR
             communication = [[v.rotate(180) if isinstance(v, Vector) else v for v in c ] for c in communication] # rotation of 180 degrees 
             v = communication[actual_pos[0]][actual_pos[1]]
             communication[actual_pos[0]][actual_pos[1]] = v.rotate(180) if isinstance(v, Vector) else v
-            """
-            # Now we set to normal the one needed to go to the food
-            pos = individual.position
-            r = individual.radius
-            rotated = [[False for j in range (0, max_x - min_x + 1)] for i in range (0, max_y - min_y + 1)] # We ned this to track what we already rotate back to normal
-            actual_pos = [pos[0] - min_y, pos[1] - min_x]
-            seen = world.get_neighbourhood(pos, r) 
-            for i in range (0, max_y - min_y):
-                for j in range (0,max_x - min_x):
-                    if seen[i][j].energy > 0: # We find so the position of the food
-                        # We define the corners of the rectangle containing food and individual at the two opposite corners
-                        min_i = min(actual_pos[0], i)
-                        min_j = min(actual_pos[1], j)
-                        max_i = max(actual_pos[0], i)
-                        max_j = max(actual_pos[1], j)
-                        # We reset to normal the value (only once)
-                        for y in range(min_i, max_i + 1):
-                            for z in range(min_j, max_j + 1):
-                                if not rotated[y][z]:
-                                    communication[y][z] = communication[y][z].rotate(180) if isinstance(communication[y][z], Vector) else communication[y][z]
-                                    rotated[y][z] = True
-            """
+            if GREEN_LIAR:
+            # GREEN LIAR
+                # Now we set to normal the one needed to go to the food
+                pos = individual.position
+                r = individual.radius
+                rotated = [[False for j in range (0, max_x - min_x + 1)] for i in range (0, max_y - min_y + 1)] # We ned this to track what we already rotate back to normal
+                actual_pos = [pos[0] - min_y, pos[1] - min_x]
+                seen = world.get_neighbourhood(pos, r) 
+                for i in range (0, max_y - min_y):
+                    for j in range (0,max_x - min_x):
+                        if seen[i][j].energy > 0: # We find so the position of the food
+                            # We define the corners of the rectangle containing food and individual at the two opposite corners
+                            min_i = min(actual_pos[0], i)
+                            min_j = min(actual_pos[1], j)
+                            max_i = max(actual_pos[0], i)
+                            max_j = max(actual_pos[1], j)
+                            # We reset to normal the value (only once)
+                            for y in range(min_i, max_i + 1):
+                                for z in range(min_j, max_j + 1):
+                                    if not rotated[y][z]:
+                                        communication[y][z] = communication[y][z].rotate(180) if isinstance(communication[y][z], Vector) else communication[y][z]
+                                        rotated[y][z] = True
+            
         return min_y, min_x, max_y, max_x, communication
 
     def decision(self, individual, population, world):
